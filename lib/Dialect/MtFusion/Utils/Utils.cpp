@@ -326,8 +326,7 @@ FailureOr<Value> mtfusion::traceReshapeOrSliceSingleConsumer(Value input) {
 
 bool mtfusion::isCommutativeOp(const Operation *op) {
   auto binLinalgOp = dyn_cast<linalg::ElemwiseBinaryOp>(op);
-  auto binHfusionOp = dyn_cast<mtfusion::ElemwiseBinaryOp>(op);
-  if (!binLinalgOp && !binHfusionOp) {
+  if (!binLinalgOp) {
     return false;
   }
   static std::unordered_set<linalg::BinaryFn> supportLinalgOps = {
@@ -340,9 +339,6 @@ bool mtfusion::isCommutativeOp(const Operation *op) {
   if (binLinalgOp) {
     linalg::BinaryFn binLinalgFn = binLinalgOp.getFunAttr().getValue();
     return supportLinalgOps.find(binLinalgFn) != supportLinalgOps.end();
-  } else if (binHfusionOp) {
-    mtfusion::BinaryFn binHfusionFn = binHfusionOp.getFunAttr().getValue();
-    return supportHfusionOps.find(binHfusionFn) != supportHfusionOps.end();
   }
   return false;
 }
@@ -350,8 +346,7 @@ bool mtfusion::isCommutativeOp(const Operation *op) {
 bool mtfusion::isHWSupportVSOp(const Operation *op) {
   // only support vs for elemwise binary op currently
   auto binLinalgOp = dyn_cast<linalg::ElemwiseBinaryOp>(op);
-  auto binHfusionOp = dyn_cast<mtfusion::ElemwiseBinaryOp>(op);
-  if (!binLinalgOp && !binHfusionOp) {
+  if (!binLinalgOp) {
     return false;
   }
   static std::unordered_set<linalg::BinaryFn> supportLinalgOps = {
@@ -366,9 +361,6 @@ bool mtfusion::isHWSupportVSOp(const Operation *op) {
   if (binLinalgOp) {
     linalg::BinaryFn binLinalgFn = binLinalgOp.getFunAttr().getValue();
     return supportLinalgOps.find(binLinalgFn) != supportLinalgOps.end();
-  } else if (binHfusionOp) {
-    mtfusion::BinaryFn binHfusionFn = binHfusionOp.getFunAttr().getValue();
-    return supportHfusionOps.find(binHfusionFn) != supportHfusionOps.end();
   }
   return false;
 }
@@ -379,6 +371,32 @@ std::optional<FusionKind> mtfusion::tryGetFusionKind(func::FuncOp &func) {
   if (!fusionKindAttr)
     return std::nullopt;
   return fusionKindAttr.getFusionKind();
+}
+
+void mtfusion::trySetFuncKind(func::FuncOp &func,
+                               const FuncKind &funcKind) {
+  if (func->hasAttr(FuncKindAttr::name)) {
+    LLVM_DEBUG(llvm::dbgs()
+                   << "Function already has a funcKind, replacing with: "
+                   << funcKind << "\n";);
+  }
+  func->setAttr(FuncKindAttr::name,
+                FuncKindAttr::get(func->getContext(), funcKind));
+  return;
+}
+
+bool mtfusion::isHost(func::FuncOp &func) {
+  auto funcKindAttr = func->getAttrOfType<FuncKindAttr>(FuncKindAttr::name);
+  if(!funcKindAttr || funcKindAttr.getFunctionKind() != FuncKind::Host)
+    return false;
+  return true;
+}
+
+bool mtfusion::isDevice(func::FuncOp &func) {
+  auto funcKindAttr = func->getAttrOfType<FuncKindAttr>(FuncKindAttr::name);
+  if(!funcKindAttr || funcKindAttr.getFunctionKind() != FuncKind::Device)
+    return false;
+  return true;
 }
 
 void mtfusion::trySetFusionKind(func::FuncOp &func,
@@ -442,8 +460,7 @@ bool reshape_utils::isElementwiseOp(Operation *op) {
 bool reshape_utils::isMarkedAsElementwiseOp(Operation *op) {
   // This would handle scalar as well
   return isa<linalg::ElemwiseBinaryOp, linalg::ElemwiseUnaryOp,
-             mtfusion::ElemwiseUnaryOp, mtfusion::ElemwiseBinaryOp,
-             mtfusion::CompareOp, mtfusion::CastOp, linalg::FillOp>(op);
+             mtfusion::CastOp, linalg::FillOp>(op);
 }
 
 bool reshape_utils::isAllParallelOp(Operation *op) {
@@ -460,8 +477,7 @@ bool reshape_utils::isLegalOp(Operation *op) {
   if (isa<linalg::MapOp, linalg::FillOp, linalg::GenericOp,
           linalg::ElemwiseBinaryOp, linalg::ElemwiseUnaryOp,
           linalg::BroadcastOp, linalg::ReduceOp, linalg::TransposeOp,
-          mtfusion::ElemwiseUnaryOp, mtfusion::ElemwiseBinaryOp,
-          mtfusion::CompareOp, mtfusion::CastOp, linalg::MatmulOp,
+          mtfusion::CastOp, linalg::MatmulOp,
           linalg::MatmulTransposeAOp, linalg::MatmulTransposeBOp>(op)) {
     return true;
   }

@@ -33,8 +33,9 @@ def MtFusion_CastOp : MtFusion_Op<"cast", [
   ]> {
   let summary = "tensor cast operation";
   let arguments = (ins 
-    Variadic<AnyTensor>:$inputs,
+    Variadic<AnyTensor>:$inputs, 
     Variadic<AnyTensor>:$outputs);
+    // RoundModeAttr:$round_mode);
   let results = (outs Variadic<AnyTensor>:$results);
   let assemblyFormat = [{
     attr-dict (`ins` `(` $inputs^ `:` type($inputs) `)`)?
@@ -42,6 +43,12 @@ def MtFusion_CastOp : MtFusion_Op<"cast", [
     (`->` type($results)^)?
   }];
   let hasCanonicalizer = 1;
+
+  let builders = [
+    OpBuilder<(ins "TypeRange":$resultTypes,
+      "ValueRange":$inputs, "ValueRange":$outputs,
+      CArg<"ArrayRef<NamedAttribute>", "{}">:$attrs)>
+  ];
 
   let extraClassDeclaration = [{
     mlir::MutableOperandRange getDpsInitsMutable() {

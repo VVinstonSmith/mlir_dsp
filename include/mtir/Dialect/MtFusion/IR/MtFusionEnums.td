@@ -133,4 +133,15 @@ def MtFusion_OutputModeEnum :
   MTFUSION_OUTPUT_MODE_SINGLE_AGGR,
 ]> {}
 
+// Enums originate from HACC.
+
+def MTFUSION_FUNC_KIND_HOST : I32EnumAttrCase<"Host", 1>;
+def MTFUSION_FUNC_KIND_DEVICE : I32EnumAttrCase<"Device", 2>;
+
+def MtFusion_FuncKindEnum : 
+  MtFusion_I32Enum<"FuncKind", "MtFusion function kind", [
+  MTFUSION_FUNC_KIND_HOST,
+  MTFUSION_FUNC_KIND_DEVICE,
+]> {}
+
 #endif // MTFUSION_IR_ENUMS

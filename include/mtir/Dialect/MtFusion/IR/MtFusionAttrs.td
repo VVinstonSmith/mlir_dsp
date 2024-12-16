@@ -33,12 +33,6 @@ class MtFusion_I32EnumAttr<string mnemonic, MtFusion_I32Enum enumInfo>
   let assemblyFormat = "`<` $value `>`";
 }
 
-def MtFusion_TilingDataAttr : MtFusion_Attr<"TilingData", "tiling_data"> {
-  let description = [{
-    This argument serves as a tiling parameter.
-  }];
-}
-
 def MtFusion_FusionKindAttr : MtFusion_Attr<"FusionKind", "fusion_kind"> {
   let parameters = (ins
     EnumParameter<MtFusion_FusionKindEnum>:$fusion_kind
@@ -96,4 +90,47 @@ def MtFusion_ReduceComposeAttr : MtFusion_Attr<"ReduceCompose", "reduce_composed
     MtFusion reduced composed.
   }];
 }
+
+// Attrs originate from HACC.
+
+def MtFusion_FuncKindAttr : MtFusion_Attr<"FuncKind", "function_kind"> {
+  let parameters = (ins
+    EnumParameter<MtFusion_FuncKindEnum>:$function_kind
+  );
+  let assemblyFormat = "`<` params `>`";
+  let description = [{
+    MtFusion function kind.
+  }];
+}
+
+def MtFusion_EntryAttr : MtFusion_Attr<"Entry", "entry"> {
+  let description = [{
+    MtFusion entry attribute for function.
+  }];
+}
+
+def MtFusion_TilingFuncAttr : MtFusion_Attr<"TilingFunc", "tiling_func"> {
+  let description = [{
+    MtFusion tiling attribute for function.
+  }];
+}
+
+def MtFusion_TilingDataAttr : MtFusion_Attr<"TilingData", "tiling_data"> {
+  let description = [{
+    This argument serves as a tiling parameter.
+  }];
+}
+
+def MtFusion_TilingKeyAttr : MtFusion_Attr<"TilingKey", "tiling_key"> {
+  let description = [{
+    This argument serves as the tiling key.
+  }];
+}
+
+def MtFusion_TilingStructAttr : MtFusion_Attr<"TilingStruct", "tiling_struct"> {
+  let description = [{
+    This argument serves as a tiling struct.
+  }];
+}
+
 #endif // MTFUSION_IR_MTFUSIONATTRS

@@ -119,15 +119,15 @@ T selectRoundMode(Type inType, Type outType) {
     return T::NORMAL;
   }
 
-  if (isa<mlir::FloatType>(inType) && outType.isInteger()) {
+  if (isa<mlir::FloatType>(inType) && isa<mlir::IntegerType>(outType)) {
     return T::TRUNC;
   }
 
-  if (inType.isInteger() && isa<mlir::FloatType>(outType)) {
+  if (isa<mlir::IntegerType>(inType) && isa<mlir::FloatType>(outType)) {
     return T::TRUNC;
   }
 
-  if (inType.isInteger() && outType.isInteger()) {
+  if (isa<mlir::IntegerType>(inType) && isa<mlir::IntegerType>(outType)) {
     return T::NORMAL;
   }
   llvm_unreachable("unsupported type cast.");

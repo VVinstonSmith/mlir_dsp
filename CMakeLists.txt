@@ -31,6 +31,7 @@ else()
 endif()
 
 set(MTIR_SOURCE_DIR ${PROJECT_SOURCE_DIR})
+set(OPFUSION_DIR ${PROJECT_SOURCE_DIR}/lib/Dialect/MtFusion/Transforms/OpFusion)
 set(MTIR_BINARY_DIR ${PROJECT_BINARY_DIR})
 include_directories(${LLVM_INCLUDE_DIRS})
 include_directories(${MLIR_INCLUDE_DIRS})

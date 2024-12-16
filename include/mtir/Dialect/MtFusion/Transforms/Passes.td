@@ -96,15 +96,15 @@ include "mlir/Pass/PassBase.td"
 //   ];
 // }
 
-// def TensorResToOutParams : Pass<"mtfusion-tensor-results-to-out-params", "ModuleOp"> {
-//   let summary = "Move tensor results to function output parameters";
-//   let constructor = "mtfusion::createTensorResToOutParamsPass()";
-//   let options = [
-//     ListOption<"includeSymbols", "include-symbols", "std::string",
-//      "Comma separated list of symbols that should apply this transformation. "
-//      "If empty, the default behavior is to apply transformation to all functions.">
-//   ];
-// }
+def TensorResToOutParams : Pass<"mtfusion-tensor-results-to-out-params", "ModuleOp"> {
+  let summary = "Move tensor results to function output parameters";
+  let constructor = "mtfusion::createTensorResToOutParamsPass()";
+  let options = [
+    ListOption<"includeSymbols", "include-symbols", "std::string",
+     "Comma separated list of symbols that should apply this transformation. "
+     "If empty, the default behavior is to apply transformation to all functions.">
+  ];
+}
 
 // def MtFusionInlineBrc : Pass<"mtfusion-inline-brc", "func::FuncOp"> {
 //   let summary = "Inline broadcast-like ops.";
@@ -122,11 +122,11 @@ include "mlir/Pass/PassBase.td"
 //   ];
 // }
 
-// def SingleOpOutline : Pass<"mtfusion-single-op-outline", "func::FuncOp"> {
-//   let constructor = "mlir::mtfusion::createSingleOpOutlinePass()";
-//   let summary = "Outline single linalg ops into kernels.";
-//   let dependentDialects = ["mtfusion::MtFusionDialect"];
-// }
+def SingleOpOutline : Pass<"mtfusion-single-op-outline", "func::FuncOp"> {
+  let constructor = "mlir::mtfusion::createSingleOpOutlinePass()";
+  let summary = "Outline single linalg ops into kernels.";
+  let dependentDialects = ["mtfusion::MtFusionDialect"];
+}
 
 // def SimplifyOps : Pass<"mtfusion-simplify-ops", "func::FuncOp"> {
 //   let summary = "Simplify operations";
@@ -165,11 +165,11 @@ include "mlir/Pass/PassBase.td"
 //   ];
 // }
 
-// def InferFuncFusionKind : Pass<"mtfusion-infer-func-fusion-kind", "func::FuncOp"> {
-//   let constructor = "mlir::mtfusion::createInferFuncFusionKind()";
-//   let summary = "Infer function for fusion kind";
-//   let dependentDialects = ["mtfusion::MtFusionDialect"];
-// }
+def InferFuncFusionKind : Pass<"mtfusion-infer-func-fusion-kind", "func::FuncOp"> {
+  let constructor = "mlir::mtfusion::createInferFuncFusionKind()";
+  let summary = "Infer function for fusion kind";
+  let dependentDialects = ["mtfusion::MtFusionDialect"];
+}
 
 // def LegalizeBF16Pass : Pass<"legalize-bf16", "func::FuncOp"> {
 //   let summary = "normalize BF16 to FP32.";

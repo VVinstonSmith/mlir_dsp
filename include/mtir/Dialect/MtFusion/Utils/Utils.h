@@ -175,6 +175,10 @@ bool isSVOp(SrcOp op) {
 void trySetFusionKind(func::FuncOp &func, const FusionKind &fusionKind);
 std::optional<FusionKind> tryGetFusionKind(func::FuncOp &func);
 
+bool isHost(func::FuncOp &func);
+bool isDevice(func::FuncOp &func);
+void trySetFuncKind(func::FuncOp &func, const FuncKind &funcKind);
+
 namespace reshape_utils {
 
 bool isInitOp(Operation *op);

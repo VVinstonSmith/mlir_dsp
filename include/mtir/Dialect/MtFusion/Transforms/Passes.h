@@ -39,20 +39,60 @@ namespace mlir {
 
 namespace mtfusion {
 
-/// Create a pass to move output tensor results' tied init operand to function
-/// parameters.
-// std::unique_ptr<mlir::Pass> createTensorResToOutParamsPass();
+/// Given a funcOp, try to outline fusable ops into functions with options and
+/// return the outlined functions by vector
+// opfusion::FusableBlocks
+// getFusableBlocks(func::FuncOp func, opfusion::FusableHelper &fusableHelper);
+
+/// Given a funcOp, try to outline fusable ops into functions with options and
+/// return the outlined functions by vector
+// LogicalResult outlineFusedFuncs(func::FuncOp entryFunc,
+//                                 const MtFusionOpFusionOptions &options,
+//                                 SmallVector<func::FuncOp> &outlinedFuncs);
+
+/// Create a pass to fuse operations into outlined functions.
+// std::unique_ptr<mlir::Pass>
+// createMtFusionOpFusionPass(const MtFusionOpFusionOptions &options = {});
+
+/// Create a pass to auto schedule fused kernels.
+// std::unique_ptr<Pass>
+// createMtFusionAutoSchedulePass(const AutoScheduleOptions &options = {});
+
+/// Create a pass to execute auto schedule sequence for the target kernel.
+// std::unique_ptr<Pass>
+// createAutoScheduleInterpreterPass(const std::string &kernelName);
+
+/// Create a pass to erase auto schedule sequence for the target kernel.
+// std::unique_ptr<Pass>
+// createEraseAutoSchedulePass(const std::string &kernelName);
+
+/// Create a pass to remove redundant copy
+// std::unique_ptr<Pass> createRedundantCopyRemovalPass();
+
+/// Create a pass to add ffts base address to func param and annotation
+// std::unique_ptr<Pass> createAddFFTSAddrPass();
+
+/// Create a pass to lianlg generic ops to named ops
+// std::unique_ptr<Pass> createGenericToNamedConversionPass();
+
+/// Create a pass to flatten linalg and MtFusion ops.
+// std::unique_ptr<Pass>
+// createFlattenOpsPass(const FlattenOpsOptions &options = {});
 
 /// Create a pass to move output tensor results' tied init operand to function
 /// parameters.
-// std::unique_ptr<Pass>
-// createTensorResToOutParamsPass(ArrayRef<std::string> includeSymbols);
+std::unique_ptr<mlir::Pass> createTensorResToOutParamsPass();
+
+/// Create a pass to move output tensor results' tied init operand to function
+/// parameters.
+std::unique_ptr<Pass>
+createTensorResToOutParamsPass(ArrayRef<std::string> includeSymbols);
 
 /// Create a pass to bufferize MtFusion ops.
 // std::unique_ptr<Pass> createMtFusionBufferizePass();
 
 /// Create a pass to outline single linalg op.
-// std::unique_ptr<Pass> createSingleOpOutlinePass();
+std::unique_ptr<Pass> createSingleOpOutlinePass();
 
 /// Create a pass to simplify operations.
 // std::unique_ptr<Pass> createSimplifyOpsPass();
@@ -70,7 +110,7 @@ namespace mtfusion {
 // std::unique_ptr<Pass> createConstantizeTilingDataPass();
 
 /// Create a pass to infer func fusion kind
-// std::unique_ptr<Pass> createInferFuncFusionKind();
+std::unique_ptr<Pass> createInferFuncFusionKind();
 
 /// Create a pass to legalize bf16 type
 // std::unique_ptr<Pass> createLegalizeBF16Pass();
