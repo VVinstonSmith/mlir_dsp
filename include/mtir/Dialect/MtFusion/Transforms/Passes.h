@@ -39,41 +39,44 @@ namespace mlir {
 
 namespace mtfusion {
 
-/// Given a funcOp, try to outline fusable ops into functions with options and
-/// return the outlined functions by vector
-// opfusion::FusableBlocks
-// getFusableBlocks(func::FuncOp func, opfusion::FusableHelper &fusableHelper);
+namespace opfusion {
 
 /// Given a funcOp, try to outline fusable ops into functions with options and
 /// return the outlined functions by vector
-// LogicalResult outlineFusedFuncs(func::FuncOp entryFunc,
-//                                 const MtFusionOpFusionOptions &options,
-//                                 SmallVector<func::FuncOp> &outlinedFuncs);
+FusableBlocks getFusableBlocks(func::FuncOp func, FusableHelper &fusableHelper);
+
+} // namespace mtfusion
+
+/// Given a funcOp, try to outline fusable ops into functions with options and
+/// return the outlined functions by vector
+LogicalResult outlineFusedFuncs(func::FuncOp entryFunc,
+                                const MtFusionOpFusionOptions &options,
+                                SmallVector<func::FuncOp> &outlinedFuncs);
 
 /// Create a pass to fuse operations into outlined functions.
-// std::unique_ptr<mlir::Pass>
-// createMtFusionOpFusionPass(const MtFusionOpFusionOptions &options = {});
+std::unique_ptr<mlir::Pass>
+createMtFusionOpFusionPass(const MtFusionOpFusionOptions &options = {});
 
 /// Create a pass to auto schedule fused kernels.
-// std::unique_ptr<Pass>
-// createMtFusionAutoSchedulePass(const AutoScheduleOptions &options = {});
+std::unique_ptr<Pass>
+createMtFusionAutoSchedulePass(const AutoScheduleOptions &options = {});
 
 /// Create a pass to execute auto schedule sequence for the target kernel.
-// std::unique_ptr<Pass>
-// createAutoScheduleInterpreterPass(const std::string &kernelName);
+std::unique_ptr<Pass>
+createAutoScheduleInterpreterPass(const std::string &kernelName);
 
 /// Create a pass to erase auto schedule sequence for the target kernel.
-// std::unique_ptr<Pass>
-// createEraseAutoSchedulePass(const std::string &kernelName);
+std::unique_ptr<Pass>
+createEraseAutoSchedulePass(const std::string &kernelName);
 
 /// Create a pass to remove redundant copy
-// std::unique_ptr<Pass> createRedundantCopyRemovalPass();
+std::unique_ptr<Pass> createRedundantCopyRemovalPass();
 
 /// Create a pass to add ffts base address to func param and annotation
 // std::unique_ptr<Pass> createAddFFTSAddrPass();
 
 /// Create a pass to lianlg generic ops to named ops
-// std::unique_ptr<Pass> createGenericToNamedConversionPass();
+std::unique_ptr<Pass> createGenericToNamedConversionPass();
 
 /// Create a pass to flatten linalg and MtFusion ops.
 // std::unique_ptr<Pass>
@@ -95,19 +98,19 @@ createTensorResToOutParamsPass(ArrayRef<std::string> includeSymbols);
 std::unique_ptr<Pass> createSingleOpOutlinePass();
 
 /// Create a pass to simplify operations.
-// std::unique_ptr<Pass> createSimplifyOpsPass();
+std::unique_ptr<Pass> createSimplifyOpsPass();
 
 /// Create a pass to normalize operations.
-// std::unique_ptr<Pass> createMtFusionNormalizeOpsPass();
+std::unique_ptr<Pass> createMtFusionNormalizeOpsPass();
 
 /// Create a pass to inline broadcast-like op
-// std::unique_ptr<Pass> createMtFusionInlineBrcPass();
+std::unique_ptr<Pass> createMtFusionInlineBrcPass();
 
 /// Create a pass to pack tiling data.
-// std::unique_ptr<Pass> createPackTilingDataPass();
+std::unique_ptr<Pass> createPackTilingDataPass();
 
 /// Create a pass to constantize tiling data.
-// std::unique_ptr<Pass> createConstantizeTilingDataPass();
+std::unique_ptr<Pass> createConstantizeTilingDataPass();
 
 /// Create a pass to infer func fusion kind
 std::unique_ptr<Pass> createInferFuncFusionKind();
@@ -116,9 +119,10 @@ std::unique_ptr<Pass> createInferFuncFusionKind();
 // std::unique_ptr<Pass> createLegalizeBF16Pass();
 
 /// Create a pass to legalize bool
-// std::unique_ptr<Pass> createLegalizeBoolPass();
+std::unique_ptr<Pass> createLegalizeBoolPass();
 
 /// create a pass to reorder MtFusion ops by bfs
+void reorderOpsByBFS(func::FuncOp funcOp);
 std::unique_ptr<Pass> createReorderOpsByBFS();
 
 /// Create a pass to downgrade FP64 constants to FP32
@@ -126,13 +130,16 @@ std::unique_ptr<Pass> createReorderOpsByBFS();
 
 // create compose and decompose multi reduce opt pass
 // std::unique_ptr<Pass> createComposeMultiReduce();
-// std::unique_ptr<Pass> createDecomposeMulti();
+std::unique_ptr<Pass> createDecomposeMulti();
 
 /// create a pass to cache io arguments
-// std::unique_ptr<Pass> createCacheIO();
+void cacheFuncIO(func::FuncOp funcOp, bool annotate);
+std::unique_ptr<Pass> createCacheIO();
 
 /// Create a pass to bubble up extract slice
 // std::unique_ptr<Pass> createBubbleUpExtractSlicePass();
+
+std::unique_ptr<Pass> createSCFForLoopCanonicalization();
 
 //===----------------------------------------------------------------------===//
 // Registration
@@ -143,10 +150,10 @@ std::unique_ptr<Pass> createReorderOpsByBFS();
 #include "mtir/Dialect/MtFusion/Transforms/Passes.h.inc"
 
 /// Register a pass to execute auto schedule sequence for the target kernel.
-// void registerAutoScheduleInterpreterPass();
+void registerAutoScheduleInterpreterPass();
 
 /// Register a pass to erase auto schedule sequence for the target kernel.
-// void registerEraseAutoSchedulePass();
+void registerEraseAutoSchedulePass();
 
 } // namespace mtfusion
 } // namespace mlir

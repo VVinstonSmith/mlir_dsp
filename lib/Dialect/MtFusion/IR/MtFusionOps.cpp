@@ -587,26 +587,27 @@ private:
 
 } // namespace
 
-static void getGenericEffectsImpl(
-    SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
-        &effects,
-    ValueRange results, const ValueRange inputOperands,
-    ValueRange outputOperands) {
-  for (auto operand : inputOperands) {
-    if (!llvm::isa<MemRefType>(operand.getType()))
-      continue;
-    effects.emplace_back(MemoryEffects::Read::get(), operand,
-                         SideEffects::DefaultResource::get());
-  }
-  for (auto operand : outputOperands) {
-    if (!llvm::isa<MemRefType>(operand.getType()))
-      continue;
-    effects.emplace_back(MemoryEffects::Read::get(), operand,
-                         SideEffects::DefaultResource::get());
-    effects.emplace_back(MemoryEffects::Write::get(), operand,
-                         SideEffects::DefaultResource::get());
-  }
-}
+// [Modified by Smith]
+// static void getGenericEffectsImpl(
+//     SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
+//         &effects,
+//     ValueRange results, const ValueRange inputOperands,
+//     ValueRange outputOperands) {
+//   for (auto operand : inputOperands) {
+//     if (!llvm::isa<MemRefType>(operand.getType()))
+//       continue;
+//     effects.emplace_back(MemoryEffects::Read::get(), operand,
+//                          SideEffects::DefaultResource::get());
+//   }
+//   for (auto operand : outputOperands) {
+//     if (!llvm::isa<MemRefType>(operand.getType()))
+//       continue;
+//     effects.emplace_back(MemoryEffects::Read::get(), operand,
+//                          SideEffects::DefaultResource::get());
+//     effects.emplace_back(MemoryEffects::Write::get(), operand,
+//                          SideEffects::DefaultResource::get());
+//   }
+// }
 
 // #define GET_OP_CLASSES
 // #include "mtir/Dialect/MtFusion/IR/MtFusionNamedStructuredOps.yamlgen.cpp.inc"

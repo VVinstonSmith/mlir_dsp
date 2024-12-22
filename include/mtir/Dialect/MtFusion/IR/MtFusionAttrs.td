@@ -15,6 +15,7 @@
 #define MTFUSION_IR_MTFUSIONATTRS
 
 include "mtir/Dialect/MtFusion/IR/MtFusionBase.td"
+include "mlir/Dialect/SCF/IR/DeviceMappingInterface.td"
 
 include "mlir/IR/AttrTypeBase.td"
 include "mlir/IR/EnumAttr.td"
@@ -23,8 +24,8 @@ include "mlir/IR/EnumAttr.td"
 // MtFusion Attributes.
 //===----------------------------------------------------------------------===//
 
-class MtFusion_Attr<string attrName, string attrMnemonic, list<Trait> traits = [
-]> : AttrDef<MtFusion_Dialect, attrName, traits> {
+class MtFusion_Attr<string attrName, string attrMnemonic, list<Trait> traits = []>
+    : AttrDef<MtFusion_Dialect, attrName, traits> {
   let mnemonic = attrMnemonic;
 }
 
@@ -130,6 +131,19 @@ def MtFusion_TilingKeyAttr : MtFusion_Attr<"TilingKey", "tiling_key"> {
 def MtFusion_TilingStructAttr : MtFusion_Attr<"TilingStruct", "tiling_struct"> {
   let description = [{
     This argument serves as a tiling struct.
+  }];
+}
+
+// Attrs originate from HIVM.
+
+def MtFusion_BlockMappingAttr : MtFusion_Attr<"BlockMapping", "block_mapping", [
+    DeclareAttrInterfaceMethods<DeviceMappingAttrInterface> ] > {
+  let parameters = (ins
+    EnumParameter<MappingIdEnum>:$block
+  );
+  let assemblyFormat = "`<` params `>`";
+  let description = [{
+    MtFusion mapping blocks to cores.
   }];
 }
 

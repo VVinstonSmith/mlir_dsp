@@ -33,3 +33,21 @@ void mlir::mtfusion::MtFusionDialect::initialize() {
 #include "mtir/Dialect/MtFusion/IR/MtFusionEnums.cpp.inc"
 
 #include "mtir/Dialect/MtFusion/IR/MtFusionOpsDialect.cpp.inc"
+
+//===----------------------------------------------------------------------===//
+// Device Mapping Attributes
+//===----------------------------------------------------------------------===//
+
+int64_t BlockMappingAttr::getMappingId() const {
+  return static_cast<int64_t>(getBlock());
+}
+
+bool BlockMappingAttr::isLinearMapping() const {
+  return getMappingId() >= static_cast<int64_t>(MappingId::LinearDim0);
+}
+
+int64_t BlockMappingAttr::getRelativeIndex() const {
+  return isLinearMapping()
+             ? getMappingId() - static_cast<int64_t>(MappingId::LinearDim0)
+             : getMappingId();
+}

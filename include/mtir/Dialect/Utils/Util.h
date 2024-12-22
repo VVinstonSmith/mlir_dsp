@@ -223,162 +223,162 @@ bool isScalarLike(Value value);
 //                                     StringRef name);
 } // namespace utils
 
-// namespace hivm {
-// namespace util {
-// // TODO: platform information
-// constexpr static unsigned int VL = 256;
-// constexpr static unsigned int BL = VL / 8;
-// const static int vectorBlockSizeBit = 256;
-// const static int srcNumPerRepeatOfVBRCBIntrin = 8;
+namespace hivm {
+namespace util {
+// TODO: platform information
+constexpr static unsigned int VL = 256;
+constexpr static unsigned int BL = VL / 8;
+const static int vectorBlockSizeBit = 256;
+const static int srcNumPerRepeatOfVBRCBIntrin = 8;
 
-// constexpr static unsigned int INTR_BYTES_PER_BLOCK = 32;
-// constexpr static unsigned int INTR_BYTES_PER_REPEAT = 256;
+constexpr static unsigned int INTR_BYTES_PER_BLOCK = 32;
+constexpr static unsigned int INTR_BYTES_PER_REPEAT = 256;
 
-// /// Deduce Alignment information for DPS Op's init operand.
-// ///
-// /// If operand has memref semantic, we try to deduce the information from the
-// /// memref type. Otherwise, we look for annotations on the tied result value. If
-// /// there is conflicting annotations, a warning is produced.
+/// Deduce Alignment information for DPS Op's init operand.
+///
+/// If operand has memref semantic, we try to deduce the information from the
+/// memref type. Otherwise, we look for annotations on the tied result value. If
+/// there is conflicting annotations, a warning is produced.
 // AlignKind deduceAlignmentForDPSInitOperand(OpOperand &operand);
 
 // AlignKind deduceAlignmentForMemRefType(MemRefType vecType);
 
-// mlir::Value tracebackMemref(mlir::Value memrefVal);
+mlir::Value tracebackMemref(mlir::Value memrefVal);
 
-// /// Traceback `memrefVal` to its defining memref alloc if possible and return
-// /// the MemRefType if it has static shape.
-// std::optional<MemRefType> traceToGetStaticShapedType(mlir::Value memrefVal);
+/// Traceback `memrefVal` to its defining memref alloc if possible and return
+/// the MemRefType if it has static shape.
+std::optional<MemRefType> traceToGetStaticShapedType(mlir::Value memrefVal);
 
-// std::optional<int64_t> traceToAllocMaxSize(mlir::Value memrefVal);
+std::optional<int64_t> traceToAllocMaxSize(mlir::Value memrefVal);
 
-// enum class ReduceKind : uint32_t {
-//   sum = 1,
-//   prod = 2,
-//   max = 3,
-//   min = 4,
-//   max_with_index = 5,
-//   min_with_index = 6,
-//   any = 7,
-//   all = 8,
-// };
-// enum ReduceKind getReduceKind(linalg::ReduceOp reduceOp);
+enum class ReduceKind : uint32_t {
+  sum = 1,
+  prod = 2,
+  max = 3,
+  min = 4,
+  max_with_index = 5,
+  min_with_index = 6,
+  any = 7,
+  all = 8,
+};
+enum ReduceKind getReduceKind(linalg::ReduceOp reduceOp);
 
-// /// Determine whether a value is signed or unsigned.
-// bool shouldMapToUnsigned(IntegerType::SignednessSemantics val);
+/// Determine whether a value is signed or unsigned.
+bool shouldMapToUnsigned(IntegerType::SignednessSemantics val);
 
-// /// Return the elementType as string for function name creation.
-// std::string getTypeName(Location loc, Type type);
+/// Return the elementType as string for function name creation.
+std::string getTypeName(Location loc, Type type);
 
-// /// Return the ConstantOp IntValue.
-// FailureOr<std::string> stringfyConstantIntOpValue(Location loc, Value value);
+/// Return the ConstantOp IntValue.
+FailureOr<std::string> stringfyConstantIntOpValue(Location loc, Value value);
 
-// bool isTransposeWithLastAxis(ArrayRef<int64_t> permutation);
+bool isTransposeWithLastAxis(ArrayRef<int64_t> permutation);
 
-// int64_t getNumPerBlock(Type t);
-// int64_t getNumPerRepeat(Type t);
+int64_t getNumPerBlock(Type t);
+int64_t getNumPerRepeat(Type t);
 
-// template <typename IRType, typename CType>
-// bool isConst(TypedAttr v, CType t) {
-//   if (isa<FloatAttr>(v)) {
-//     auto srcTypeAttr = dyn_cast_or_null<FloatAttr>(v);
-//     return srcTypeAttr.getValue() == APFloat(t);
-//   }
-//   if (isa<IntegerAttr>(v)) {
-//     auto srcIntAttr = dyn_cast_or_null<IntegerAttr>(v);
-//     auto intval = srcIntAttr.getInt();
-//     return intval == t;
-//   }
-//   return false;
-// }
+template <typename IRType, typename CType>
+bool isConst(TypedAttr v, CType t) {
+  if (isa<FloatAttr>(v)) {
+    auto srcTypeAttr = dyn_cast_or_null<FloatAttr>(v);
+    return srcTypeAttr.getValue() == APFloat(t);
+  }
+  if (isa<IntegerAttr>(v)) {
+    auto srcIntAttr = dyn_cast_or_null<IntegerAttr>(v);
+    auto intval = srcIntAttr.getInt();
+    return intval == t;
+  }
+  return false;
+}
 
-// // Returns if the given source MemRef type is collapsible with the specified
-// // reassociation indices. This function works as a strict extension based
-// // on `memref::CollapseShapeOp::isGuaranteedCollapsible`, which has weak
-// // constraints on the strides of trailing one-size dimensions.
-// bool isGuaranteedCollapsibleStrictly(
-//     MemRefType srcType, ArrayRef<ReassociationIndices> reassociation);
+// Returns if the given source MemRef type is collapsible with the specified
+// reassociation indices. This function works as a strict extension based
+// on `memref::CollapseShapeOp::isGuaranteedCollapsible`, which has weak
+// constraints on the strides of trailing one-size dimensions.
+bool isGuaranteedCollapsibleStrictly(
+    MemRefType srcType, ArrayRef<ReassociationIndices> reassociation);
 
-// /// Return the MemRefTypes
-// SmallVector<MemRefType> getMemRefTypes(TypeRange types);
+/// Return the MemRefTypes
+SmallVector<MemRefType> getMemRefTypes(TypeRange types);
 
-// /// Judge if all MemRefTypes has same rank value
-// bool isAllSameRank(const SmallVectorImpl<MemRefType> &memrefTypes);
+/// Judge if all MemRefTypes has same rank value
+bool isAllSameRank(const SmallVectorImpl<MemRefType> &memrefTypes);
 
-// /// Returns if the reassociations are identity that each indices group only
-// /// contains a single dimension. e.g. `[[0], [1], [3]]` is indentity collapse.
-// bool isIdentityCollapse(
-//     const SmallVectorImpl<ReassociationIndices> &reassociations);
+/// Returns if the reassociations are identity that each indices group only
+/// contains a single dimension. e.g. `[[0], [1], [3]]` is indentity collapse.
+bool isIdentityCollapse(
+    const SmallVectorImpl<ReassociationIndices> &reassociations);
 
-// /// Refine the reassociations into largest possible continuous parts,ensuring
-// /// that all memrefTypes can be collapsed together.
-// SmallVector<ReassociationIndices> getContinuousReassociation(
-//     const SmallVectorImpl<MemRefType> &memrefTypes,
-//     const SmallVectorImpl<ReassociationIndices> &reassociations);
+/// Refine the reassociations into largest possible continuous parts,ensuring
+/// that all memrefTypes can be collapsed together.
+SmallVector<ReassociationIndices> getContinuousReassociation(
+    const SmallVectorImpl<MemRefType> &memrefTypes,
+    const SmallVectorImpl<ReassociationIndices> &reassociations);
 
-// /// Refine the reassociations into continuous parts. Here reshape dim means
-// /// reduce or broadcast dim which cannot be collapsed with non-reshape dim.
-// SmallVector<ReassociationIndices>
-// getContinuousReassociation(const SmallVectorImpl<MemRefType> &memrefTypes,
-//                            ArrayRef<int64_t> reshapeDims = {},
-//                            ArrayRef<int64_t> permutations = {});
+/// Refine the reassociations into continuous parts. Here reshape dim means
+/// reduce or broadcast dim which cannot be collapsed with non-reshape dim.
+SmallVector<ReassociationIndices>
+getContinuousReassociation(const SmallVectorImpl<MemRefType> &memrefTypes,
+                           ArrayRef<int64_t> reshapeDims = {},
+                           ArrayRef<int64_t> permutations = {});
 
-// /// Combine reassociation index groups if the reassociation indices group is not
-// /// transposed, and the shape of each memref type corresponding to each index in
-// /// the reassociation indices group is 1
-// SmallVector<ReassociationIndices> combineReassociationGroups(
-//     const SmallVectorImpl<MemRefType> &memrefTypes,
-//     const SmallVectorImpl<ReassociationIndices> &reassociations);
+/// Combine reassociation index groups if the reassociation indices group is not
+/// transposed, and the shape of each memref type corresponding to each index in
+/// the reassociation indices group is 1
+SmallVector<ReassociationIndices> combineReassociationGroups(
+    const SmallVectorImpl<MemRefType> &memrefTypes,
+    const SmallVectorImpl<ReassociationIndices> &reassociations);
 
-// template <typename TensorOrMemRefType,
-//           typename = typename std::enable_if_t<
-//               std::is_same_v<TensorOrMemRefType, TensorType> ||
-//               std::is_same_v<TensorOrMemRefType, MemRefType>>>
-// SmallVector<int> collectAlignUnits(ArrayRef<int32_t> alignDims,
-//                                    ArrayRef<int32_t> alignBytes,
-//                                    TensorOrMemRefType unalignedTy) {
-//   int rank = unalignedTy.getRank();
-//   int bitWidth = unalignedTy.getElementTypeBitWidth();
-//   SmallVector<int> alignTargets(rank, 1);
-//   assert(alignBytes.size() == alignDims.size());
-//   for (int i = 0; i < alignDims.size(); ++i) {
-//     int dim = alignDims[i];
-//     assert(dim >= 0 && dim < rank);
-//     int alignBits = alignBytes[i] * utils::kBitsToByte;
-//     if (bitWidth % alignBits == 0) {
-//       // If the alignment is smaller than type size, align to itself
-//       continue;
-//     }
-//     assert(alignBits % bitWidth == 0 &&
-//            "Alignment cannot satisfied by bitwidth");
-//     alignTargets[dim] = std::lcm(alignBits / bitWidth, alignTargets[dim]);
-//   }
+template <typename TensorOrMemRefType,
+          typename = typename std::enable_if_t<
+              std::is_same_v<TensorOrMemRefType, TensorType> ||
+              std::is_same_v<TensorOrMemRefType, MemRefType>>>
+SmallVector<int> collectAlignUnits(ArrayRef<int32_t> alignDims,
+                                   ArrayRef<int32_t> alignBytes,
+                                   TensorOrMemRefType unalignedTy) {
+  int rank = unalignedTy.getRank();
+  int bitWidth = unalignedTy.getElementTypeBitWidth();
+  SmallVector<int> alignTargets(rank, 1);
+  assert(alignBytes.size() == alignDims.size());
+  for (int i = 0; i < alignDims.size(); ++i) {
+    int dim = alignDims[i];
+    assert(dim >= 0 && dim < rank);
+    int alignBits = alignBytes[i] * utils::kBitsToByte;
+    if (bitWidth % alignBits == 0) {
+      // If the alignment is smaller than type size, align to itself
+      continue;
+    }
+    assert(alignBits % bitWidth == 0 &&
+           "Alignment cannot satisfied by bitwidth");
+    alignTargets[dim] = std::lcm(alignBits / bitWidth, alignTargets[dim]);
+  }
 
-//   int innerAlignedUnits = 1;
-//   int shapeAccumulation = 1;
-//   auto shapes = unalignedTy.getShape();
-//   SmallVector<int> alignUnits(rank + 1, 1);
-//   for (int dim = rank - 1; dim >= 0; --dim) {
-//     // The alignment target forces the INNER dimension to get aligned
-//     int newAlignedUnits = std::lcm(innerAlignedUnits, alignTargets[dim]);
-//     if (shapeAccumulation % newAlignedUnits == 0) {
-//       // already aligned
-//       alignUnits[dim + 1] = 1;
-//     } else {
-//       alignUnits[dim + 1] = newAlignedUnits / innerAlignedUnits;
-//     }
-//     innerAlignedUnits = newAlignedUnits;
-//     if (!ShapedType::isDynamic(shapes[dim])) {
-//       shapeAccumulation =
-//           shapeAccumulation * std::lcm(shapes[dim], alignUnits[dim + 1]);
-//     }
-//   }
-//   // The outermost dimension needs no extra alignments
-//   alignUnits[0] = 1;
-//   return alignUnits;
-// }
+  int innerAlignedUnits = 1;
+  int shapeAccumulation = 1;
+  auto shapes = unalignedTy.getShape();
+  SmallVector<int> alignUnits(rank + 1, 1);
+  for (int dim = rank - 1; dim >= 0; --dim) {
+    // The alignment target forces the INNER dimension to get aligned
+    int newAlignedUnits = std::lcm(innerAlignedUnits, alignTargets[dim]);
+    if (shapeAccumulation % newAlignedUnits == 0) {
+      // already aligned
+      alignUnits[dim + 1] = 1;
+    } else {
+      alignUnits[dim + 1] = newAlignedUnits / innerAlignedUnits;
+    }
+    innerAlignedUnits = newAlignedUnits;
+    if (!ShapedType::isDynamic(shapes[dim])) {
+      shapeAccumulation =
+          shapeAccumulation * std::lcm(shapes[dim], alignUnits[dim + 1]);
+    }
+  }
+  // The outermost dimension needs no extra alignments
+  alignUnits[0] = 1;
+  return alignUnits;
+}
 
-// } // namespace util
-// } // namespace hivm
+} // namespace util
+} // namespace hivm
 } // namespace mlir
 
 namespace mlir {

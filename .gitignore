@@ -1,5 +1,6 @@
 build/
 demos/
+**/*.txt
 
 # Prerequisites
 *.d

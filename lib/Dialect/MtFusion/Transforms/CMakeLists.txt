@@ -1,12 +1,36 @@
 add_mlir_dialect_library(MLIRMtFusionTransforms
-    ReorderOpsByBFS.cpp
-    TensorResToOutParams.cpp
+    GenericToNamedConversion.cpp  
+    Normalize.cpp
+    LegalizeBool.cpp
+    SimplifyOps.cpp
+    InlineBrc.cpp
     OpFusion/FusableBlock.cpp
     OpFusion/FusableBlockAnalyzer.cpp
     OpFusion/FusableBlockOutliner.cpp
     OpFusion/FusableHelper.cpp
     InferFuncFuseKind.cpp
+    OpFusion.cpp
     SingleOpOutline.cpp
+    TensorResToOutParams.cpp
+    AutoSchedule/ValueHandle.cpp
+    AutoSchedule/KernelInfo.cpp
+    AutoSchedule/TilingUtils.cpp
+    AutoSchedule/AutoScheduleInterpreter.cpp
+    AutoSchedule/AutoScheduleBase.cpp
+    AutoSchedule/ScheduleOperations.cpp
+    AutoSchedule/PureElemwiseSchedule.cpp
+    AutoSchedule/AnyPBSchedule.cpp
+    AutoSchedule/LastAxisPRBSchedule.cpp
+    AutoSchedule/ShallowCVSchedule.cpp
+    AutoSchedule/MixCVSchedule.cpp
+    AutoSchedule/BlockPureElemwiseSchedule.cpp
+    CacheIO.cpp
+    DecomposeMulti.cpp
+    ReorderOpsByBFS.cpp
+    ConstantizeTilingData.cpp
+    PackTilingData.cpp
+    LoopCanonicalization.cpp
+    CopyRemovalPass.cpp
 
     ADDITIONAL_HEADER_DIRS
     ${MTIR_SOURCE_DIR}/include/mtir/Dialect/MtFusion
@@ -14,9 +38,6 @@ add_mlir_dialect_library(MLIRMtFusionTransforms
     DEPENDS
     MLIRMtFusionPassIncGen
 
-    # LINK_LIBS PUBLIC
-    # MLIRIR
-    # MLIRPass
-    # MLIRTransforms
-    # MLIRSupport
+    LINK_LIBS PUBLIC
+    MLIRTransformDialectTransforms
 )

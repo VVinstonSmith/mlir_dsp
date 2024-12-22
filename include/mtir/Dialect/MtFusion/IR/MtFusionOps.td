@@ -35,7 +35,6 @@ def MtFusion_CastOp : MtFusion_Op<"cast", [
   let arguments = (ins 
     Variadic<AnyTensor>:$inputs, 
     Variadic<AnyTensor>:$outputs);
-    // RoundModeAttr:$round_mode);
   let results = (outs Variadic<AnyTensor>:$results);
   let assemblyFormat = [{
     attr-dict (`ins` `(` $inputs^ `:` type($inputs) `)`)?
@@ -47,12 +46,25 @@ def MtFusion_CastOp : MtFusion_Op<"cast", [
   let builders = [
     OpBuilder<(ins "TypeRange":$resultTypes,
       "ValueRange":$inputs, "ValueRange":$outputs,
-      CArg<"ArrayRef<NamedAttribute>", "{}">:$attrs)>
+      CArg<"ArrayRef<NamedAttribute>", "{}">:$attrs), [{
+        SmallVector<Value, 2> operands = {inputs.begin(), inputs.end()};
+        operands.append(outputs.begin(), outputs.end());
+        build($_builder, $_state, resultTypes, operands, attrs);
+      }]>
   ];
 
   let extraClassDeclaration = [{
     mlir::MutableOperandRange getDpsInitsMutable() {
       return getOutputsMutable();
+    }
+    mtfusion::RoundMode getRoundMode() {
+      return (*this)->getAttrOfType<RoundModeAttr>(RoundModeAttr::name).getValue();
+      // for(auto &attr : getAttributes()){
+      //   if(auto namedAttr = dyn_cast<NamedAttribute>(attr)){
+      //     if(namedAttr.getName() == "RoundMode")
+      //       return namedAttr;
+      //   }
+      // }
     }
   }];
 }

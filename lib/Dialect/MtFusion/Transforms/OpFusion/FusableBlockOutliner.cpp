@@ -15,6 +15,7 @@
 #include "llvm/Support/Debug.h"
 
 #include "mlir/Transforms/TopologicalSortUtils.h"
+// #include "mlir/Analysis/TopologicalSortUtils.h"
 
 #define DEBUG_TYPE "mtfusion-fuse"
 

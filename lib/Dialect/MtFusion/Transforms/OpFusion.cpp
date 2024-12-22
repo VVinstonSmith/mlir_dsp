@@ -9,8 +9,8 @@
 // This file implements op fusion algorithm and outline into functions.
 //
 //===----------------------------------------------------------------------===//
-#include "mtir/Dialect/HACC/IR/HACC.h"
-#include "mtir/Dialect/HACC/Utils/Utils.h"
+
+#include "mtir/Dialect/MtFusion/Utils/Utils.h"
 #include "mtir/Dialect/MtFusion/IR/MtFusion.h"
 #include "mtir/Dialect/MtFusion/Transforms/OpFusion/FusableBlock.h"
 #include "mtir/Dialect/MtFusion/Transforms/OpFusion/FusableBlockAnalyzer.h"
@@ -57,14 +57,9 @@ getOptionFromLabel(func::FuncOp func, const MtFusionOpFusionOptions &options) {
 LogicalResult outlineFusedFuncs(func::FuncOp entryFunc,
                                 const MtFusionOpFusionOptions &options,
                                 SmallVector<func::FuncOp> &outlinedFuncs) {
-  std::cout << "Enter outlineFusedFuncs." << std::endl;
-
   if (options.fusionMode == FusionKind::Unknown)
     return failure();
 
-  std::cout << "Outlining function "
-            << (hacc::isHost(entryFunc) ? "is" : "not")
-            << " heterogeneous.\n";
   FusableHelper fusableHelper(options.fusionMode, options.moveOutToParam,
                               options.maxHorizontalFusionSize);
   
@@ -73,10 +68,6 @@ LogicalResult outlineFusedFuncs(func::FuncOp entryFunc,
   if (fusableBlocks.empty())
     return success();
   
-  // for(auto& fusableBlock : fusableBlocks){
-  //   fusableBlock.dump();
-  // }
-
   FusableBlockOutliner outliner(fusableBlocks, options.outputMode,
                                 options.alwaysInline, true);
 
@@ -106,14 +97,13 @@ struct MtFusionOpFusionPass
   }
   void runOnOperation() override {
     initOptions();
-    std::cout<<"Enter MtFusionOpFusionPass."<<std::endl;
     // This is a module pass to avoid function making and calling issues
     getOperation()->walk([&](func::FuncOp func) -> void {
-      //  std::cout<<"flag1"<<std::endl;
-      if (!hacc::isHost(func)) {
+      if (!mtfusion::isHost(func)) {
+        func->dump();
+        std::cout<<"is a host function."<<std::endl;
         return;
       }
-      //  std::cout<<"flag2"<<std::endl;
       [[maybe_unused]] SmallVector<func::FuncOp> outlinedFuncs;
       auto newOption = mtfusion::getOptionFromLabel(func, options_);
       // Return by reference of this outlinedFuncs

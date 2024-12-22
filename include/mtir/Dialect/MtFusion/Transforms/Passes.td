@@ -11,69 +11,77 @@
 
 include "mlir/Pass/PassBase.td"
 
-// def MtFusionOpFusion : Pass<"mtfusion-fuse-ops", "ModuleOp"> {
-//   let summary = "MtFusion Fuse operations on tensors";
-//   let constructor = "mtfusion::createMtFusionOpFusionPass()";
-//   let dependentDialects = [
-//     "mtfusion::MtFusionDialect",
-//   ];
-//   let options = [
-//     Option<"outputMode", "output-mode", "::mlir::mtfusion::OutputMode",
-//     "mtfusion::OutputMode::Multiple",
-//     "Outlined function output mode (default is multi, can also use single or single-aggr)",
-//     [{::llvm::cl::values(
-//         clEnumValN(mtfusion::OutputMode::Multiple, "multi",
-//                    "Outlined function with multiple outputs"),
-//         clEnumValN(mtfusion::OutputMode::Single, "single",
-//                    "Outlined function with single output"),
-//         clEnumValN(mtfusion::OutputMode::SingleAggressive, "single-aggr",
-//                    "Outlined function with single output, fusing "
-//                    "more aggressively by duplicating operations")
-//     )}]>,
-//     Option<"fusionMode", "fusion-mode", "::mlir::mtfusion::FusionKind",
-//            "mtfusion::FusionKind::Unknown", "Fusion kind is determined by label">,
-//     Option<"alwaysInline", "always-inline", "bool", /*default=*/"false",
-//                "Enable always inline for the outline function.">,
-//     Option<"moveOutToParam", "move-out-to-param", "bool", /* default */"true",
-//            "Whether move the tensor out to params or not">,
-//     Option<"maxHorizontalFusionSize", "max-horizontal-fusion-size", "int", /* default */"-1",
-//            "Maximum horizontal (non-dependent) fusioning allowed, -1 for unlimited attempt"
-//            "of horizontal fusion">
-//   ];
-// }
+def MtFusionOpFusion : Pass<"mtfusion-fuse-ops", "ModuleOp"> {
+  let summary = "MtFusion Fuse operations on tensors";
+  let constructor = "mtfusion::createMtFusionOpFusionPass()";
+  let dependentDialects = [
+    "mtfusion::MtFusionDialect",
+  ];
+  let options = [
+    Option<"outputMode", "output-mode", "::mlir::mtfusion::OutputMode",
+      "mtfusion::OutputMode::Multiple",
+      "Outlined function output mode (default is multi, can also use single or single-aggr)",
+      [{::llvm::cl::values(
+          clEnumValN(mtfusion::OutputMode::Multiple, "multi",
+                    "Outlined function with multiple outputs"),
+          clEnumValN(mtfusion::OutputMode::Single, "single",
+                    "Outlined function with single output"),
+          clEnumValN(mtfusion::OutputMode::SingleAggressive, "single-aggr",
+                    "Outlined function with single output, fusing "
+                    "more aggressively by duplicating operations")
+      )}]>,
+    Option<"fusionMode", "fusion-mode", "::mlir::mtfusion::FusionKind",
+      "mtfusion::FusionKind::Unknown", "Fusion kind is determined by label",
+      [{::llvm::cl::values(
+          clEnumValN(mtfusion::FusionKind::PureElemwise, "PURE_ELEMWISE", ""),
+          clEnumValN(mtfusion::FusionKind::AnyPB, "ANY_PB", ""),
+          clEnumValN(mtfusion::FusionKind::LastAxisPBR, "LAST_AXIS_PBR", ""),
+          clEnumValN(mtfusion::FusionKind::MixCV, "MIX_CV", ""),
+          clEnumValN(mtfusion::FusionKind::ShallowCV, "SHALLOW_CV", ""),
+          clEnumValN(mtfusion::FusionKind::Unknown, "UNKNOWN", "")
+      )}]>,
+    Option<"alwaysInline", "always-inline", "bool", /*default=*/"false",
+               "Enable always inline for the outline function.">,
+    Option<"moveOutToParam", "move-out-to-param", "bool", /* default */"true",
+           "Whether move the tensor out to params or not">,
+    Option<"maxHorizontalFusionSize", "max-horizontal-fusion-size", "int", /* default */"-1",
+           "Maximum horizontal (non-dependent) fusioning allowed, -1 for unlimited attempt"
+           "of horizontal fusion">
+  ];
+}
 
-// def AutoSchedule : Pass<"mtfusion-auto-schedule", "ModuleOp"> {
-//   let summary = "Auto schedule fused kernels.";
-//   let constructor = "mlir::mtfusion::createMtFusionAutoSchedulePass()";
-//   let dependentDialects = ["linalg::LinalgDialect",
-//                            "mtfusion::MtFusionDialect",
-//                            "transform::TransformDialect",
-//                            "arith::ArithDialect"];
-//   let options = [
-//     Option<"blockDim", "block-dim", "unsigned", "1", "Number of blocks to use">,
-//     Option<"enableAutoMultiBuffer", "enable-auto-multi-buffer", "bool", "false",
-//            "Enable auto multi buffer">,
-//     Option<"maxBufferCntTuning", "max-buffer-count-tuning", "int64_t", "0",
-//            "allow maxBufferCnt tuning">,
-//   ];
-// }
+def AutoSchedule : Pass<"mtfusion-auto-schedule", "ModuleOp"> {
+  let summary = "Auto schedule fused kernels.";
+  let constructor = "mlir::mtfusion::createMtFusionAutoSchedulePass()";
+  let dependentDialects = ["linalg::LinalgDialect",
+                           "mtfusion::MtFusionDialect",
+                           "transform::TransformDialect",
+                           "arith::ArithDialect"];
+  let options = [
+    Option<"blockDim", "block-dim", "unsigned", "1", "Number of blocks to use">,
+    Option<"enableAutoMultiBuffer", "enable-auto-multi-buffer", "bool", "false",
+           "Enable auto multi buffer">,
+    Option<"maxBufferCntTuning", "max-buffer-count-tuning", "int64_t", "0",
+           "allow maxBufferCnt tuning">,
+  ];
+}
 
-// def RedundantCopyRemoval : Pass<"redundant-copy-removal", "func::FuncOp"> {
-//   let summary = "Remove redundant copy operations";
-//   let constructor = "mtfusion::createRedundantCopyRemovalPass()";
-// }
+def RedundantCopyRemoval : Pass<"redundant-copy-removal", "func::FuncOp"> {
+  let summary = "Remove redundant copy operations";
+  let constructor = "mtfusion::createRedundantCopyRemovalPass()";
+}
 
 // def AddFFTSAddr : Pass<"mtfusion-add-ffts-addr", "ModuleOp"> {
 //   let summary = "Add ffts base address to func param and annotation";
 //   let constructor = "mlir::mtfusion::createAddFFTSAddrPass()";
 // }
 
-// def GenericToNamedConversion : Pass<"convert-generic-to-named", "func::FuncOp"> {
-//   let summary = "Convert linalg generic ops to linalg named ops and mtfusion named ops.";
-//   let constructor = "mlir::mtfusion::createGenericToNamedConversionPass()";
-//   let dependentDialects = ["linalg::LinalgDialect",
-//                            "mtfusion::MtFusionDialect"];
-// }
+def GenericToNamedConversion : Pass<"convert-generic-to-named", "func::FuncOp"> {
+  let summary = "Convert linalg generic ops to linalg named ops and mtfusion named ops.";
+  let constructor = "mlir::mtfusion::createGenericToNamedConversionPass()";
+  let dependentDialects = ["linalg::LinalgDialect",
+                           "mtfusion::MtFusionDialect"];
+}
 
 // def FlattenOps : Pass<"mtfusion-flatten-ops", "func::FuncOp"> {
 //   let constructor = "mlir::mtfusion::createFlattenOpsPass()";
@@ -106,10 +114,10 @@ def TensorResToOutParams : Pass<"mtfusion-tensor-results-to-out-params", "Module
   ];
 }
 
-// def MtFusionInlineBrc : Pass<"mtfusion-inline-brc", "func::FuncOp"> {
-//   let summary = "Inline broadcast-like ops.";
-//   let constructor = "mtfusion::createMtFusionInlineBrcPass()";
-// }
+def MtFusionInlineBrc : Pass<"mtfusion-inline-brc", "func::FuncOp"> {
+  let summary = "Inline broadcast-like ops.";
+  let constructor = "mtfusion::createMtFusionInlineBrcPass()";
+}
 
 // def MtFusionBufferize : Pass<"mtfusion-bufferize"> {
 //   let summary = "Bufferize the mtfusion dialect";
@@ -128,42 +136,42 @@ def SingleOpOutline : Pass<"mtfusion-single-op-outline", "func::FuncOp"> {
   let dependentDialects = ["mtfusion::MtFusionDialect"];
 }
 
-// def SimplifyOps : Pass<"mtfusion-simplify-ops", "func::FuncOp"> {
-//   let summary = "Simplify operations";
-//   let constructor = "mlir::mtfusion::createSimplifyOpsPass()";
-//   let dependentDialects = ["mtfusion::MtFusionDialect"];
-// }
+def SimplifyOps : Pass<"mtfusion-simplify-ops", "func::FuncOp"> {
+  let summary = "Simplify operations";
+  let constructor = "mlir::mtfusion::createSimplifyOpsPass()";
+  let dependentDialects = ["mtfusion::MtFusionDialect"];
+}
 
-// def Normalize : Pass<"mtfusion-normalize-ops", "func::FuncOp"> {
-//   let summary = "Normalize Hfusion";
-//   let constructor = "mlir::mtfusion::createMtFusionNormalizeOpsPass()";
-//   let dependentDialects = ["mtfusion::MtFusionDialect"];
-// }
+def Normalize : Pass<"mtfusion-normalize-ops", "func::FuncOp"> {
+  let summary = "Normalize mtfusion";
+  let constructor = "mlir::mtfusion::createMtFusionNormalizeOpsPass()";
+  let dependentDialects = ["mtfusion::MtFusionDialect"];
+}
 
-// def PackTilingData : Pass<"mtfusion-pack-tiling-data", "ModuleOp"> {
-//   let summary = "Pack dynamic tiling information into a struct.";
-//   let description = [{
-//     Pack the tiling information into a struct.
-//   }];
-//   let constructor = "mlir::mtfusion::createPackTilingDataPass()";
-//   let dependentDialects = [
-//     "mlir::func::FuncDialect",
-//     "mlir::memref::MemRefDialect",
-//   ];
-// }
+def PackTilingData : Pass<"mtfusion-pack-tiling-data", "ModuleOp"> {
+  let summary = "Pack dynamic tiling information into a struct.";
+  let description = [{
+    Pack the tiling information into a struct.
+  }];
+  let constructor = "mlir::mtfusion::createPackTilingDataPass()";
+  let dependentDialects = [
+    "mlir::func::FuncDialect",
+    "mlir::memref::MemRefDialect",
+  ];
+}
 
-// def ConstantizeTilingData : Pass<"mtfusion-constantize-tiling-data", "ModuleOp"> {
-//   let summary = "Propagate constants between tiling and device function";
-//   let description = [{
-//     Propagate constants from calculate tiling to the device
-//     function.
-//   }];
-//   let constructor = "mlir::mtfusion::createConstantizeTilingDataPass()";
-//   let dependentDialects = [
-//     "mlir::func::FuncDialect",
-//     "mlir::memref::MemRefDialect",
-//   ];
-// }
+def ConstantizeTilingData : Pass<"mtfusion-constantize-tiling-data", "ModuleOp"> {
+  let summary = "Propagate constants between tiling and device function";
+  let description = [{
+    Propagate constants from calculate tiling to the device
+    function.
+  }];
+  let constructor = "mlir::mtfusion::createConstantizeTilingDataPass()";
+  let dependentDialects = [
+    "mlir::func::FuncDialect",
+    "mlir::memref::MemRefDialect",
+  ];
+}
 
 def InferFuncFusionKind : Pass<"mtfusion-infer-func-fusion-kind", "func::FuncOp"> {
   let constructor = "mlir::mtfusion::createInferFuncFusionKind()";
@@ -178,12 +186,12 @@ def InferFuncFusionKind : Pass<"mtfusion-infer-func-fusion-kind", "func::FuncOp"
 //                            "mtfusion::MtFusionDialect"];
 // }
 
-// def LegalizeBoolPass : Pass<"legalize-bool", "func::FuncOp"> {
-//   let summary = "cast int8 to int1 for input and int1 to int8 for output.";
-//   let constructor = "mlir::mtfusion::createLegalizeBoolPass()";
-//   let dependentDialects = ["arith::ArithDialect",
-//                            "mtfusion::MtFusionDialect"];
-// }
+def LegalizeBoolPass : Pass<"legalize-bool", "func::FuncOp"> {
+  let summary = "cast int8 to int1 for input and int1 to int8 for output.";
+  let constructor = "mlir::mtfusion::createLegalizeBoolPass()";
+  let dependentDialects = ["arith::ArithDialect",
+                           "mtfusion::MtFusionDialect"];
+}
 
 def ReorderOpsByBFS : Pass<"mtfusion-reorder-ops", "func::FuncOp"> {
   let summary = "reorder the ops by bfs.";
@@ -212,19 +220,19 @@ def ReorderOpsByBFS : Pass<"mtfusion-reorder-ops", "func::FuncOp"> {
 //   ];
 // }
 
-// def DecomposeMulti : Pass<"decompose-multi", "func::FuncOp"> {
-//   let summary = "Decompose multi ops into single ones";
-//   let constructor = "mlir::mtfusion::createDecomposeMulti()";
-//   let dependentDialects = [];
-// }
+def DecomposeMulti : Pass<"decompose-multi", "func::FuncOp"> {
+  let summary = "Decompose multi ops into single ones";
+  let constructor = "mlir::mtfusion::createDecomposeMulti()";
+  let dependentDialects = [];
+}
 
-// def CacheIO : Pass<"mtfusion-cache-io", "func::FuncOp"> {
-//   let summary = "cache input and output argument";
-//   let constructor = "::mlir::mtfusion::createCacheIO()";
-//   let dependentDialects = ["linalg::LinalgDialect",
-//                            "mtfusion::MtFusionDialect",
-//                            "mlir::tensor::TensorDialect"];
-// }
+def CacheIO : Pass<"mtfusion-cache-io", "func::FuncOp"> {
+  let summary = "cache input and output argument";
+  let constructor = "::mlir::mtfusion::createCacheIO()";
+  let dependentDialects = ["linalg::LinalgDialect",
+                           "mtfusion::MtFusionDialect",
+                           "mlir::tensor::TensorDialect"];
+}
 
 // def BubbleUpExtractSlice : Pass<"bubble-up-extract-slice", "func::FuncOp"> {
 //   let summary = "Bubble up extract slice";
@@ -234,5 +242,16 @@ def ReorderOpsByBFS : Pass<"mtfusion-reorder-ops", "func::FuncOp"> {
 //   let constructor = "::mlir::mtfusion::createBubbleUpExtractSlicePass()";
 //   let dependentDialects = [];
 // }
+
+def SCFForLoopCanonicalization : Pass<"loop-canonicalize", "func::FuncOp"> {
+  let summary = "Canonicalize SCF loops";
+  let constructor = "mlir::mtfusion::createSCFForLoopCanonicalization()";
+  let dependentDialects = [
+    "affine::AffineDialect",
+    "tensor::TensorDialect",
+    "scf::SCFDialect",
+    "memref::MemRefDialect",
+  ];
+}
 
 #endif // MTIR_DIALECT_MTFUSION_TRANSFORMS_PASSES

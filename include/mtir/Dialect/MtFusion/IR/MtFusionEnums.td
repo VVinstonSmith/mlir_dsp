@@ -144,4 +144,19 @@ def MtFusion_FuncKindEnum :
   MTFUSION_FUNC_KIND_DEVICE,
 ]> {}
 
+// Enums originate from HIVM.
+
+def DimX : I64EnumAttrCase<"DimX", 0, "x">;
+def DimY : I64EnumAttrCase<"DimY", 1, "y">;
+def DimZ : I64EnumAttrCase<"DimZ", 2, "z">;
+def LinearDim0 : I64EnumAttrCase<"LinearDim0", 3, "linear_dim_0">;
+def LinearDim1 : I64EnumAttrCase<"LinearDim1", 4, "linear_dim_1">;
+def LinearDim2 : I64EnumAttrCase<"LinearDim2", 5, "linear_dim_2">;
+
+def MappingIdEnum : I64EnumAttr<"MappingId", "Mapping ids for loop mapping", [
+    DimX, DimY, DimZ, LinearDim0, LinearDim1, LinearDim2]> {
+  let cppNamespace = "::mlir::mtfusion";
+}
+
+
 #endif // MTFUSION_IR_ENUMS

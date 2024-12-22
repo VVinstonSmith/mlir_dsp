@@ -18,43 +18,41 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/Transforms/Passes.h"
 
-#include <iostream>
-
 namespace mlir {
 namespace mtfusion {
 
 static void canonicalizationPipeline(OpPassManager &pm) {
   pm.addPass(createCSEPass());
-  CanonicalizerOptions options;
-  options.enableExtendedPattern = true;
-  std::vector<std::string> disabledPatterns{"FoldFillWithCopy"};
-  options.disabledPatterns = disabledPatterns;
-  pm.addPass(createCanonicalizerPass(options));
+  pm.addPass(createCanonicalizerPass());
+  // CanonicalizerOptions options;
+  // options.enableExtendedPattern = true;
+  // std::vector<std::string> disabledPatterns{"FoldFillWithCopy"};
+  // options.disabledPatterns = disabledPatterns;
+  // pm.addPass(createCanonicalizerPass(options));
 }
 
-// static void preProcess(OpPassManager &pm,
-//                        const MtFusionPipelineOptions &options) {
-//   if (options.enableTritonKernelCompile) {
-//     std::cout << "createArithToMtFusionConversionPass." << std::endl; 
-//     pm.addPass(createArithToMtFusionConversionPass());
-//   }
-//   pm.addPass(createTensorToMtFusionConversionPass());
-//   canonicalizationPipeline(pm);
-//   pm.nest<func::FuncOp>().addPass(createDowngradeFP64CstOpPass());
-//   pm.nest<func::FuncOp>().addPass(createGenericToNamedConversionPass());
-//   pm.nest<func::FuncOp>().addPass(createMtFusionNormalizeOpsPass());
-//   pm.nest<func::FuncOp>().addPass(createLegalizeBF16Pass());
-//   pm.nest<func::FuncOp>().addPass(createLegalizeBoolPass());
-//   pm.nest<func::FuncOp>().addPass(createSimplifyOpsPass());
-//   pm.nest<func::FuncOp>().addPass(createMtFusionInlineBrcPass());
-//   // normalize should be called after inline-brc pass:
-//   //  a) convert scalar-vector ops to vector-scalar ops
-//   pm.nest<func::FuncOp>().addPass(createMtFusionNormalizeOpsPass());
-//   // tensor-results-to-out-params pass:
-//   //  a) requires merge consecutive extract/insert slice patterns optimization
-//   //  b) should be last in the preprocess pipeline because some pass might
-//   //     modify IR related to the result value
-// }
+static void preProcess(OpPassManager &pm,
+                       const MtFusionPipelineOptions &options) {
+  if (options.enableTritonKernelCompile) {
+    // pm.addPass(createArithToMtFusionConversionPass());
+  }
+  // pm.addPass(createTensorToMtFusionConversionPass());
+  canonicalizationPipeline(pm);
+  // pm.nest<func::FuncOp>().addPass(createDowngradeFP64CstOpPass());
+  pm.nest<func::FuncOp>().addPass(createGenericToNamedConversionPass());
+  pm.nest<func::FuncOp>().addPass(createMtFusionNormalizeOpsPass());
+  // pm.nest<func::FuncOp>().addPass(createLegalizeBF16Pass());
+  pm.nest<func::FuncOp>().addPass(createLegalizeBoolPass());
+  pm.nest<func::FuncOp>().addPass(createSimplifyOpsPass());
+  pm.nest<func::FuncOp>().addPass(createMtFusionInlineBrcPass());
+  // normalize should be called after inline-brc pass:
+  //  a) convert scalar-vector ops to vector-scalar ops
+  pm.nest<func::FuncOp>().addPass(createMtFusionNormalizeOpsPass());
+  // tensor-results-to-out-params pass:
+  //  a) requires merge consecutive extract/insert slice patterns optimization
+  //  b) should be last in the preprocess pipeline because some pass might
+  //     modify IR related to the result value
+}
 
 // static void flattenAndFold(OpPassManager &pm) {
 //   pm.nest<func::FuncOp>().addPass(createBubbleUpExtractSlicePass());
@@ -75,7 +73,7 @@ static void canonicalizationPipeline(OpPassManager &pm) {
 
 static void inferAndOutlineOp(OpPassManager &pm,
                               const MtFusionPipelineOptions &options) {
-  // pm.nest<func::FuncOp>().addPass(createInferFuncFusionKind());
+  pm.nest<func::FuncOp>().addPass(createInferFuncFusionKind());
   MtFusionOpFusionOptions opFusionPassOption;
   opFusionPassOption.alwaysInline = false;
   opFusionPassOption.moveOutToParam = true;
@@ -87,17 +85,17 @@ static void inferAndOutlineOp(OpPassManager &pm,
   pm.nest<func::FuncOp>().addPass(createSingleOpOutlinePass());
 }
 
-// static void mtfusionTilingOptimizationPipeline(OpPassManager &pm) {
-//   pm.addPass(createConstantizeTilingDataPass());
-//   return;
-//   canonicalizationPipeline(pm);
-//   pm.addPass(createPackTilingDataPass());
-//   // after tiling is all constantized and packed, try to simplify loops
-//   pm.addPass(createArithToAffineConversionPass());
-//   canonicalizationPipeline(pm);
-//   pm.addPass(createSCFForLoopCanonicalizationPass());
-//   canonicalizationPipeline(pm);
-// }
+static void mtfusionTilingOptimizationPipeline(OpPassManager &pm) {
+  pm.addPass(createConstantizeTilingDataPass());
+  return;
+  canonicalizationPipeline(pm);
+  pm.addPass(createPackTilingDataPass());
+  // after tiling is all constantized and packed, try to simplify loops
+  // pm.addPass(createArithToAffineConversionPass());
+  // canonicalizationPipeline(pm);
+  pm.addPass(createSCFForLoopCanonicalizationPass());
+  canonicalizationPipeline(pm);
+}
 
 static void mtfusionAutoSchedulePipeline(OpPassManager &pm,
                                         const MtFusionPipelineOptions &options) {
@@ -115,41 +113,41 @@ static void mtfusionAutoSchedulePipeline(OpPassManager &pm,
   pm.addPass(createMtFusionAutoSchedulePass(autoScheduleOptions));
 
   // END AUTO SCHEDULE
-  // pm.nest<func::FuncOp>().addPass(createDecomposeMulti());
+  pm.nest<func::FuncOp>().addPass(createDecomposeMulti());
   
   // Auto Schedule might generated generic ops.
-  // pm.nest<func::FuncOp>().addPass(createGenericToNamedConversionPass());
-  // if (options.enableOpsReorder) {
-  //   canonicalizationPipeline(pm);
-  //   pm.nest<func::FuncOp>().addPass(createReorderOpsByBFS());
-  // }
+  pm.nest<func::FuncOp>().addPass(createGenericToNamedConversionPass());
+  if (options.enableOpsReorder) {
+    canonicalizationPipeline(pm);
+    pm.nest<func::FuncOp>().addPass(createReorderOpsByBFS());
+  }
 
-  // mtfusionTilingOptimizationPipeline(pm);
+  mtfusionTilingOptimizationPipeline(pm);
 }
 
 static void postProcess(OpPassManager &pm) {
-  // pm.nest<func::FuncOp>().addPass(createMtFusionInlineBrcPass());
+  pm.nest<func::FuncOp>().addPass(createMtFusionInlineBrcPass());
   // normalize should be called after inline-brc pass:
   //  a) convert scalar-vector ops to vector-scalar ops
-  // pm.nest<func::FuncOp>().addPass(createMtFusionNormalizeOpsPass());
+  pm.nest<func::FuncOp>().addPass(createMtFusionNormalizeOpsPass());
   // will only operate on functions with ShallowCV fusion kind
   // pm.addPass(createAddFFTSAddrPass());
 }
 
 void buildMtFusionPipelines(OpPassManager &pm,
                            const MtFusionPipelineOptions &options) {
-  // preProcess(pm, options);
+  preProcess(pm, options);
   canonicalizationPipeline(pm);
   if (!options.enableTritonKernelCompile) {
     // flattenAndFold(pm);
     inferAndOutlineOp(pm, options);
     mtfusionAutoSchedulePipeline(pm, options);
   } else {
-    pm.nest<func::FuncOp>().addPass(
-        tensor::createCanonicalizeTensorReshapePass());
+    // pm.nest<func::FuncOp>().addPass(
+    //     tensor::createCanonicalizeTensorReshapePass());
   }
   canonicalizationPipeline(pm);
-  // postProcess(pm);
+  postProcess(pm);
 }
 
 //===----------------------------------------------------------------------===//

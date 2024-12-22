@@ -16,10 +16,6 @@
 namespace mlir {
 namespace mtfusion {
 namespace opfusion {
-
-FusableBlocks getFusableBlocks(func::FuncOp func,
-                               FusableHelper &fusableHelper);
-
 class FusableBlockAnalyzer {
 public:
   FusableBlockAnalyzer(Block &block, const FusableHelper &fusableHelper);

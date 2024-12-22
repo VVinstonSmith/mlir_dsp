@@ -334,7 +334,7 @@ bool mtfusion::isCommutativeOp(const Operation *op) {
       linalg::BinaryFn::max_signed,   linalg::BinaryFn::min_signed,
       linalg::BinaryFn::max_unsigned, linalg::BinaryFn::min_unsigned};
 
-  static std::unordered_set<mtfusion::BinaryFn> supportHfusionOps = {
+  static std::unordered_set<mtfusion::BinaryFn> supportMtFusionOps = {
       mtfusion::BinaryFn::maxf, mtfusion::BinaryFn::minf};
   if (binLinalgOp) {
     linalg::BinaryFn binLinalgFn = binLinalgOp.getFunAttr().getValue();
@@ -355,7 +355,7 @@ bool mtfusion::isHWSupportVSOp(const Operation *op) {
       linalg::BinaryFn::max_unsigned, linalg::BinaryFn::min_unsigned,
   };
 
-  static std::unordered_set<mtfusion::BinaryFn> supportHfusionOps = {
+  static std::unordered_set<mtfusion::BinaryFn> supportMtFusionOps = {
       mtfusion::BinaryFn::maxf, mtfusion::BinaryFn::minf,
       mtfusion::BinaryFn::powf};
   if (binLinalgOp) {
@@ -379,9 +379,10 @@ void mtfusion::trySetFuncKind(func::FuncOp &func,
     LLVM_DEBUG(llvm::dbgs()
                    << "Function already has a funcKind, replacing with: "
                    << funcKind << "\n";);
-  }
-  func->setAttr(FuncKindAttr::name,
+  } else{
+    func->setAttr(FuncKindAttr::name,
                 FuncKindAttr::get(func->getContext(), funcKind));
+  }
   return;
 }
 

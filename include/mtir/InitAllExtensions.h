@@ -14,14 +14,14 @@
 #ifndef MTIR_INITALLEXTENSIONS_H
 #define MTIR_INITALLEXTENSIONS_H
 
-// #include "mtir/Dialect/MtFusion/TransformOps/MtFusionTransformOps.h"
+#include "mtir/Dialect/MtFusion/TransformOps/MtFusionTransformOps.h"
 #include "mlir/IR/DialectRegistry.h"
 
 namespace mtir {
 
 inline void registerAllExtensions(mlir::DialectRegistry &registry) {
   // Register all transform dialect extensions.
-  // mlir::mtfusion::registerTransformDialectExtension(registry);
+  mlir::mtfusion::registerTransformDialectExtension(registry);
 }
 
 } // namespace mtir
