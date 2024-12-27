@@ -31,6 +31,7 @@ add_mlir_dialect_library(MLIRMtFusionTransforms
     PackTilingData.cpp
     LoopCanonicalization.cpp
     CopyRemovalPass.cpp
+    MultiBuffering.cpp
 
     ADDITIONAL_HEADER_DIRS
     ${MTIR_SOURCE_DIR}/include/mtir/Dialect/MtFusion

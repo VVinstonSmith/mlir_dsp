@@ -254,4 +254,15 @@ def SCFForLoopCanonicalization : Pass<"loop-canonicalize", "func::FuncOp"> {
   ];
 }
 
+def MultiBuffering : Pass<"mtfusion-multi-buffering", "func::FuncOp"> {
+  let summary = "multi buffering memref.copy";
+  let constructor = "mlir::mtfusion::createMultiBufferingPass()";
+  let dependentDialects = [
+    "linalg::LinalgDialect",
+    "mtfusion::MtFusionDialect",
+    "scf::SCFDialect",
+    "memref::MemRefDialect",
+  ];
+}
+
 #endif // MTIR_DIALECT_MTFUSION_TRANSFORMS_PASSES

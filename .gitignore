@@ -1,6 +1,7 @@
 build/
 demos/
 **/*.txt
+!**/CMakeLists.txt
 
 # Prerequisites
 *.d

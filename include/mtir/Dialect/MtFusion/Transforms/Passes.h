@@ -139,7 +139,11 @@ std::unique_ptr<Pass> createCacheIO();
 /// Create a pass to bubble up extract slice
 // std::unique_ptr<Pass> createBubbleUpExtractSlicePass();
 
+/// Create a pass to canonicalize scf.for
 std::unique_ptr<Pass> createSCFForLoopCanonicalization();
+
+/// Create a pass to do multi-buffering
+std::unique_ptr<Pass> createMultiBufferingPass();
 
 //===----------------------------------------------------------------------===//
 // Registration
