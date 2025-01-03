@@ -254,6 +254,29 @@ def SCFForLoopCanonicalization : Pass<"loop-canonicalize", "func::FuncOp"> {
   ];
 }
 
+def PredefinedTiling : Pass<"mtfusion-predefined-tiling", "ModuleOp"> {
+  let summary = "tile kernels with predefined rules.";
+  let constructor = "mlir::mtfusion::createPredefinedTilingPass()";
+  let dependentDialects = ["linalg::LinalgDialect",
+                           "mtfusion::MtFusionDialect",
+                           "transform::TransformDialect",
+                           "arith::ArithDialect"];
+  let options = [
+    Option<"fusionMode", "fusion-mode", "::mlir::mtfusion::FusionKind",
+      "mtfusion::FusionKind::Unknown", "Fusion kind is determined by label",
+      [{::llvm::cl::values(
+          clEnumValN(mtfusion::FusionKind::PureElemwise, "PURE_ELEMWISE", ""),
+          clEnumValN(mtfusion::FusionKind::AnyPB, "ANY_PB", ""),
+          clEnumValN(mtfusion::FusionKind::LastAxisPBR, "LAST_AXIS_PBR", ""),
+          clEnumValN(mtfusion::FusionKind::MixCV, "MIX_CV", ""),
+          clEnumValN(mtfusion::FusionKind::ShallowCV, "SHALLOW_CV", ""),
+          clEnumValN(mtfusion::FusionKind::Unknown, "UNKNOWN", "")
+      )}]>,
+    Option<"tilingSeqStr", "tiling-seq", "std::string", /*default=*/"", 
+      "Sequence of predefined tiling rules">
+  ];
+}
+
 def MultiBuffering : Pass<"mtfusion-multi-buffering", "func::FuncOp"> {
   let summary = "multi buffering memref.copy";
   let constructor = "mlir::mtfusion::createMultiBufferingPass()";

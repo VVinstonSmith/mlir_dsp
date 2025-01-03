@@ -24,6 +24,9 @@ add_mlir_dialect_library(MLIRMtFusionTransforms
     AutoSchedule/ShallowCVSchedule.cpp
     AutoSchedule/MixCVSchedule.cpp
     AutoSchedule/BlockPureElemwiseSchedule.cpp
+    PredefinedTiling/TilingBase.cpp
+    PredefinedTiling/TilingOperations.cpp
+    PredefinedTiling/DeepCVTiling.cpp
     CacheIO.cpp
     DecomposeMulti.cpp
     ReorderOpsByBFS.cpp

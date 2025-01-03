@@ -40,6 +40,9 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/FormatVariadic.h"
 
+#include <iostream>
+using namespace std;
+
 #define DEBUG_TYPE "mtfusion-auto-schedule"
 #define DBGS() (llvm::dbgs() << '[' << DEBUG_TYPE << "] [Base Scheduler] ")
 #define LDBG(X) LLVM_DEBUG(DBGS() << X << "\n")
@@ -474,8 +477,11 @@ SchedulerBase::~SchedulerBase() {
 
 LogicalResult SchedulerBase::runPreScheduleProcedure(OpBuilder &opBuilder) {
   func::FuncOp currentFunc = getOriginalKernel();
+  cout<<"### Entering SchedulerBase::runPreScheduleProcedure"<<endl;
+
   if (failed(cacheIO(opBuilder)))
     return currentFunc->emitWarning("Failed to cache inputs/outputs.");
+  cout<<"### After cacheIO"<<endl;
 
   if (failed(analyzeAndVerifyKernel()))
     return currentFunc->emitWarning("Failed to analyze and verify kernel.");
@@ -483,10 +489,12 @@ LogicalResult SchedulerBase::runPreScheduleProcedure(OpBuilder &opBuilder) {
 }
 
 LogicalResult SchedulerBase::runScheduleProcedure(OpBuilder &opBuilder) {
-  func::FuncOp currentFunc = getOriginalKernel();
+  cout<<"### Entering SchedulerBase::runScheduleProcedure"<<endl;
+  func::FuncOp currentFunc = getOriginalKernel(); 
+
   if (failed(calculateTiling(opBuilder)))
     return currentFunc->emitWarning("Failed to calculate tiling.");
-
+  
   if (failed(selectTiling()))
     return currentFunc->emitWarning("Failed to select tiling.");
 
@@ -496,8 +504,11 @@ LogicalResult SchedulerBase::runScheduleProcedure(OpBuilder &opBuilder) {
 }
 
 LogicalResult SchedulerBase::runOnOperation(OpBuilder &opBuilder) {
+  cout<<"### Entering SchedulerBase::runOnOperation"<<endl;
+
   if (failed(runPreScheduleProcedure(opBuilder)))
     return failure();
+
   if (failed(runScheduleProcedure(opBuilder)))
     return failure();
   return success();
@@ -583,6 +594,7 @@ LogicalResult SchedulerBase::cacheIO(OpBuilder &opBuilder) {
 }
 
 LogicalResult SchedulerBase::calculateTiling(OpBuilder &opBuilder) {
+  cout<<"### Entering SchedulerBase::calculateTiling"<<endl;
   OpBuilder::InsertionGuard g(opBuilder);
   TilingInfo *tilingInfo = getTilingInfo();
   MLIRContext *ctx = getContext();
@@ -642,6 +654,7 @@ LogicalResult SchedulerBase::calculateTiling(OpBuilder &opBuilder) {
 }
 
 LogicalResult SchedulerBase::selectTiling() {
+  cout<<"### Entering SchedulerBase::selectTiling"<<endl;
   TilingInfo *tilingInfo = getTilingInfo();
 
   // Try to simplify host tiling func

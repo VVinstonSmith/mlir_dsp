@@ -158,5 +158,34 @@ def MappingIdEnum : I64EnumAttr<"MappingId", "Mapping ids for loop mapping", [
   let cppNamespace = "::mlir::mtfusion";
 }
 
+// Enums for tiling.
+
+def AxisM : I64EnumAttrCase<"M", 0>;
+def AxisN : I64EnumAttrCase<"N", 1>;
+def AxisK : I64EnumAttrCase<"K", 2>;
+
+def MtFusion_AxisEnum : I64EnumAttr<"Axis", "", [
+    AxisM, AxisN, AxisK]> {
+  let cppNamespace = "::mlir::mtfusion";
+}
+
+def MatA : I64EnumAttrCase<"MatA", 0>;
+def MatB : I64EnumAttrCase<"MatB", 1>;
+def MatC : I64EnumAttrCase<"MatC", 2>;
+
+def MtFusion_MatrixEnum : I64EnumAttr<"Matrix", "", [
+    MatA, MatB, MatC]> {
+  let cppNamespace = "::mlir::mtfusion";
+}
+
+def CacheDDR : I64EnumAttrCase<"DDR", 0>;
+def CacheGSM : I64EnumAttrCase<"GSM", 1>;
+def CacheAM : I64EnumAttrCase<"AM", 2>;
+def CacheSM : I64EnumAttrCase<"SM", 3>;
+
+def MtFusion_CacheEnum : I64EnumAttr<"Cache", "", [
+    CacheDDR, CacheGSM, CacheAM, CacheSM]> {
+  let cppNamespace = "::mlir::mtfusion";
+}
 
 #endif // MTFUSION_IR_ENUMS

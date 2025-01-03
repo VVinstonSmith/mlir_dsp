@@ -101,7 +101,7 @@ struct MtFusionOpFusionPass
     getOperation()->walk([&](func::FuncOp func) -> void {
       if (!mtfusion::isHost(func)) {
         func->dump();
-        std::cout<<"is a host function."<<std::endl;
+        std::cout<<"is not a host function."<<std::endl;
         return;
       }
       [[maybe_unused]] SmallVector<func::FuncOp> outlinedFuncs;

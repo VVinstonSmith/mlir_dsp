@@ -134,6 +134,46 @@ def MtFusion_TilingStructAttr : MtFusion_Attr<"TilingStruct", "tiling_struct"> {
   }];
 }
 
+def MtFusion_TilingAxisAttr : MtFusion_Attr<"TilingAxis", "tiling_axis"> {
+  let parameters = (ins
+    EnumParameter<MtFusion_AxisEnum>:$axis
+  );
+  let assemblyFormat = "`<` params `>`";
+  let description = [{
+    MtFusion tiling axis.
+  }];
+}
+
+def MtFusion_NthreadsAttr : MtFusion_Attr<"Nthreads", "nthreads"> {
+  let parameters = (ins 
+    OptionalParameter<"int64_t">:$nthreads
+  );
+  let assemblyFormat = "`<` params `>`";
+  let description = [{
+    MtFusion number of threads.
+  }];
+}
+
+def MtFusion_CopyMatAttr : MtFusion_Attr<"CopyMat", "copy_mat"> {
+  let parameters = (ins 
+    OptionalArrayRefParameter<"mlir::mtfusion::Matrix">:$matrices
+  );
+  let assemblyFormat = "`<` params `>`";
+  let description = [{
+    Which matrix to be copied during tiling.
+  }];
+}
+
+def MtFusion_CacheAttr : MtFusion_Attr<"CopyDst", "copy_dst"> {
+  let parameters = (ins
+    OptionalArrayRefParameter<"mlir::mtfusion::Cache">:$caches
+  );
+  let assemblyFormat = "`<` params `>`";
+  let description = [{
+    Which cache space receives the copied matrix during tiling.
+  }];
+}
+
 // Attrs originate from HIVM.
 
 def MtFusion_BlockMappingAttr : MtFusion_Attr<"BlockMapping", "block_mapping", [

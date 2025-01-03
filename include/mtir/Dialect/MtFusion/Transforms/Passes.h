@@ -142,6 +142,9 @@ std::unique_ptr<Pass> createCacheIO();
 /// Create a pass to canonicalize scf.for
 std::unique_ptr<Pass> createSCFForLoopCanonicalization();
 
+/// Create a pass to do predefined tiling
+std::unique_ptr<Pass> createPredefinedTilingPass();
+
 /// Create a pass to do multi-buffering
 std::unique_ptr<Pass> createMultiBufferingPass();
 
