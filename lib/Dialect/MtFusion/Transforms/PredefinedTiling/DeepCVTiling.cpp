@@ -82,9 +82,9 @@ LogicalResult DeepCVTiler::createTilingImpl(OpBuilder &opBuilder) {
   
   /// Generate tiling argument positions.
   SmallVector<size_t> tilingArgsPos;
-  for (auto [idxArg, tilingArg] : llvm::enumerate(toBeTiledKenrel.getArguments())) {
-    if (toBeTiledKenrel.getArgAttr(idxArg, mtfusion::TilingDataAttr::name)) {
-      tilingArgsPos.push_back(idxArg);
+  for (auto [argIdx, tilingArg] : llvm::enumerate(toBeTiledKenrel.getArguments())) {
+    if (toBeTiledKenrel.getArgAttr(argIdx, mtfusion::TilingDataAttr::name)) {
+      tilingArgsPos.push_back(argIdx);
     }
   }
 

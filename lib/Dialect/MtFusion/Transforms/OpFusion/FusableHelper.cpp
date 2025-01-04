@@ -269,7 +269,8 @@ OpPattern FusableHelper::getOpPattern(Operation *op) {
   if (isa<tensor::EmptyOp>(op))
     return OpPattern::kBuffer;
   if (isa<tensor::DimOp>(op))
-    return OpPattern::kBuffer;
+    // return OpPattern::kBuffer;
+    return OpPattern::kAuxiliary;
   if (isa<tensor::ExpandShapeOp, tensor::ReshapeOp, tensor::CollapseShapeOp,
           tensor::ExtractSliceOp>(op))
     return OpPattern::kReshape;

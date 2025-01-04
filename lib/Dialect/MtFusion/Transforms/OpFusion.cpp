@@ -67,6 +67,9 @@ LogicalResult outlineFusedFuncs(func::FuncOp entryFunc,
   FusableBlocks fusableBlocks = getFusableBlocks(entryFunc, fusableHelper);
   if (fusableBlocks.empty())
     return success();
+
+  // for(auto block : fusableBlocks)
+  //   block.dump();
   
   FusableBlockOutliner outliner(fusableBlocks, options.outputMode,
                                 options.alwaysInline, true);

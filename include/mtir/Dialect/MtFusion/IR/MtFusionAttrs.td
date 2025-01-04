@@ -146,7 +146,7 @@ def MtFusion_TilingAxisAttr : MtFusion_Attr<"TilingAxis", "tiling_axis"> {
 
 def MtFusion_NthreadsAttr : MtFusion_Attr<"Nthreads", "nthreads"> {
   let parameters = (ins 
-    OptionalParameter<"int64_t">:$nthreads
+    OptionalParameter<"unsigned">:$nthreads
   );
   let assemblyFormat = "`<` params `>`";
   let description = [{
@@ -164,13 +164,23 @@ def MtFusion_CopyMatAttr : MtFusion_Attr<"CopyMat", "copy_mat"> {
   }];
 }
 
-def MtFusion_CacheAttr : MtFusion_Attr<"CopyDst", "copy_dst"> {
+def MtFusion_CopyDstAttr : MtFusion_Attr<"CopyDst", "copy_dst"> {
   let parameters = (ins
     OptionalArrayRefParameter<"mlir::mtfusion::Cache">:$caches
   );
   let assemblyFormat = "`<` params `>`";
   let description = [{
     Which cache space receives the copied matrix during tiling.
+  }];
+}
+
+def MtFusion_MemLevelAttr : MtFusion_Attr<"MemLevel", "memory_level"> {
+  let parameters = (ins
+    EnumParameter<MtFusion_CacheEnum>:$level
+  );
+  let assemblyFormat = "`<` params `>`";
+  let description = [{
+    Which cache to allocate a dynamic buffer.
   }];
 }
 

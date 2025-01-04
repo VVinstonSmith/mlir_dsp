@@ -498,7 +498,46 @@ private:
 
   /// Create switch cases for entry function to call scheduled functions
   /// according to tiling key and the callers of device kernels.
-  // LogicalResult fixCallSitesAndCaller(OpBuilder &opBuilder);
+  LogicalResult fixCallSitesAndCaller(OpBuilder &opBuilder);
+
+  /// Caller information.
+  struct CallerInfo {
+    func::FuncOp caller;
+    /// Callers original argument number (before appending tiling data)
+    size_t callerOriginalArgNumber;
+    /// Function called by the caller.
+    func::FuncOp callee;
+    /// Call sites within the caller calling callee.
+    SmallVector<func::CallOp> callSites;
+  };
+
+  /// Get callee's caller's information.
+  static void getCallerInfo(func::FuncOp callee, ModuleOp enclosingModule,
+                            DenseMap<func::FuncOp, CallerInfo> &info);
+
+  /// Information needed to construct callee's arguments.
+  struct CallSiteArgBuilderInfo {
+    /// Mapping from tiling index (in ordered present in tiling struct) to the
+    /// caller's function argument index.
+    DenseMap<size_t, size_t> tilingIdx2CallerArgIdx{};
+    /// Mapping from the index of constant tiling data to the constant value
+    /// in callee.
+    // DenseMap<size_t, int64_t> calleeArgIdx2ConstValue{};
+    /// Whether callee is the original kernel.
+    bool calleeIsOriginalKernel{false};
+  };
+
+  /// Fix the call sites by replacing arguments.
+  void doFixCallSite(CallerInfo &callerInfo, func::CallOp callSite,
+                     CallSiteArgBuilderInfo &builderInfo,
+                     DenseMap<Operation *, Operation *> &irMap,
+                     OpBuilder &opBuilder);
+
+  /// Construct new call site arguments.
+  static SmallVector<Value>
+  getNewArgsForCallSite(func::FuncOp caller, func::CallOp oldCallSite,
+                        const CallSiteArgBuilderInfo &info,
+                        OpBuilder &opBuilder);
 
   /// Helper function to convert `tensor.empty` to
   /// `bufferization.alloc_tensor`.

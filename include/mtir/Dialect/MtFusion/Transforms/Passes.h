@@ -148,6 +148,15 @@ std::unique_ptr<Pass> createPredefinedTilingPass();
 /// Create a pass to do multi-buffering
 std::unique_ptr<Pass> createMultiBufferingPass();
 
+/// Create a pass to remove redundant tensor.extract and memref.subview
+std::unique_ptr<Pass> createRedundantExtractRemovalPass();
+
+/// Create a pass to parallize scf.for with multiple threads.
+std::unique_ptr<Pass> createThreadParallelizationPass();
+
+/// Create a pass to normalize buffers in mtfution for dsp memory hierarchy.
+std::unique_ptr<Pass> createBufferNormalizePass();
+
 //===----------------------------------------------------------------------===//
 // Registration
 //===----------------------------------------------------------------------===//

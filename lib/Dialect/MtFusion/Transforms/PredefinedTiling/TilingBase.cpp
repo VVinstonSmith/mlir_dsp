@@ -204,10 +204,10 @@ LogicalResult TilerBase::createAndApplyTiling(OpBuilder &opBuilder) {
     return failure();
   }
   cleanUpAfterTiling();
-  // if (failed(fixCallSitesAndCaller(opBuilder))) {
-  //   return failure();
-  // }
-  // getOriginalKernel()->erase();
+  if (failed(fixCallSitesAndCaller(opBuilder))) {
+    return failure();
+  }
+  getOriginalKernel()->erase();
   return success();
 }
 
@@ -231,8 +231,8 @@ LogicalResult TilerBase::applyTilingImpl(OpBuilder &opBuilder) {
   PassManager pm(getContext());
   pm.addPass(
       mtfusion::createAutoScheduleInterpreterPass(getToBeTiledKernelName()));
-  // pm.addPass(
-  //     mtfusion::createEraseAutoSchedulePass(getToBeTiledKernelName()));
+  pm.addPass(
+      mtfusion::createEraseAutoSchedulePass(getToBeTiledKernelName()));
   if (failed(pm.run(getModule())))
     return failure();
   return success();
@@ -240,7 +240,7 @@ LogicalResult TilerBase::applyTilingImpl(OpBuilder &opBuilder) {
 
 void TilerBase::cleanUpAfterTiling() {
   getHandleRecord()->clear();
-  setToBeTiledKernel(nullptr);
+  // setToBeTiledKernel(nullptr);
   setTransformSeqHandle(Value());
   for (auto *td : getTilingInfo()->getTilingStruct())
     td->setHandle(nullptr);
@@ -285,7 +285,10 @@ LogicalResult TilerBase::initTiling(OpBuilder &opBuilder) {
     // Cast tiling arg from i64 to index.
     auto castOp = opBuilder.create<index::CastSOp>(toBeTiledKernel.getLoc(),
         opBuilder.getIndexType(), toBeTiledKernel.getArgument(argIdx));
-    castOp->setAttrs(opBuilder.getDictionaryAttr(argAttrs));
+    // castOp->setAttrs(opBuilder.getDictionaryAttr(argAttrs));
+    castOp->setAttr(
+      opBuilder.getStringAttr(mtfusion::TilingDataAttr::name),
+      opBuilder.getUnitAttr()); 
     // Store function argument and load it agian.
     // auto idx = opBuilder.create<arith::ConstantOp>(
     //   tilingDataAlloca.getLoc(), opBuilder.getIndexAttr(argIdx - tilingDataPosStart));
@@ -317,6 +320,110 @@ LogicalResult TilerBase::initTiling(OpBuilder &opBuilder) {
   seqOp->setAttr(kTransformDialectTagAttrName,
                  opBuilder.getStringAttr(auto_schedule::getTransformRootTag(
                      toBeTiledKernelName)));
+  return success();
+}
+
+void TilerBase::getCallerInfo(func::FuncOp callee, ModuleOp enclosingModule,
+                              DenseMap<func::FuncOp, CallerInfo> &info) {
+  std::optional<SymbolTable::UseRange> maybeUses =
+      callee.getSymbolUses(enclosingModule);
+  for (SymbolTable::SymbolUse use : maybeUses.value()) {
+    func::CallOp callSite = cast<func::CallOp>(use.getUser());
+    auto callerOp = callSite->getParentOfType<func::FuncOp>();
+    auto &callerInfo = info[callerOp];
+    callerInfo.caller = callerOp;
+    callerInfo.callerOriginalArgNumber = callerOp.getNumArguments();
+    callerInfo.callee = callee;
+    callerInfo.callSites.push_back(callSite);
+  }
+}
+
+SmallVector<Value>TilerBase::getNewArgsForCallSite(
+    func::FuncOp caller, func::CallOp oldCallSite,
+    const TilerBase::CallSiteArgBuilderInfo &info, OpBuilder &opBuilder) {
+  auto oldCallArgs = oldCallSite->getOperands();
+  size_t oldArgCount = oldCallArgs.size();
+  size_t tilingStructSize = info.tilingIdx2CallerArgIdx.size();
+  size_t newArgCount = oldArgCount + tilingStructSize;
+
+  SmallVector<Value> newCallArgs;
+  newCallArgs.reserve(newArgCount);
+  // By convention, tiling data is appended after existing args, but the order
+  // to which they're added matches the tiling struct order
+  newCallArgs.append(oldCallArgs.begin(), oldCallArgs.end());
+  newCallArgs.append(SmallVector<Value>(tilingStructSize, Value()));
+
+  for (size_t idx = oldArgCount; idx < newArgCount; idx++) {
+    auto tilingIdx = idx - oldArgCount;
+    assert(info.tilingIdx2CallerArgIdx.contains(tilingIdx));
+    newCallArgs[idx] =
+        caller.getArgument(info.tilingIdx2CallerArgIdx.at(tilingIdx));
+  }
+  return newCallArgs;
+}
+
+void TilerBase::doFixCallSite(CallerInfo &callerInfo, func::CallOp callSite,
+                              CallSiteArgBuilderInfo &builderInfo,
+                              DenseMap<Operation *, Operation *> &irMap,
+                              OpBuilder &opBuilder) {
+  OpBuilder::InsertionGuard g(opBuilder);
+  opBuilder.setInsertionPoint(callSite);
+  auto newArgs = getNewArgsForCallSite(callerInfo.caller, callSite, builderInfo,
+                                       opBuilder);
+  func::CallOp newCallSite = opBuilder.create<func::CallOp>(
+      callSite.getLoc(), callSite.getResultTypes(), 
+      getToBeTiledKernel().getSymName(), newArgs);
+  irMap.insert(std::make_pair(callSite, newCallSite));
+}
+
+LogicalResult TilerBase::fixCallSitesAndCaller(OpBuilder &opBuilder) {
+  OpBuilder::InsertionGuard g(opBuilder);
+
+  // Get callers of the original, unscheduled kernel
+  DenseMap<func::FuncOp, CallerInfo> workList;
+  getCallerInfo(getOriginalKernel(), getModule(), workList);
+
+  // Bail out on trivial case where there is no caller
+  if (workList.empty())
+    return failure();
+
+  // Repeatedly modify the caller and call site, until there is no caller.
+  DenseMap<Operation *, Operation *> irMap;
+  DenseSet<func::FuncOp> processedCaller;
+  while (!workList.empty()) {
+    auto &[caller, callerInfo] = *(workList.begin());
+    if (processedCaller.contains(caller)) {
+      return failure();
+    }
+
+    size_t callerArgCount = caller.getNumArguments();
+    getCallerInfo(caller, getModule(), workList);
+
+    // Insert tiling data arguments to caller's enclosing func.
+    DenseMap<size_t, size_t> tilingIdx2CallerArgIdx;
+    for (size_t idx = callerArgCount; 
+        idx < callerArgCount + this->getTilingSeq().size(); idx++) {
+      SmallVector<NamedAttribute> argAttrs = {getTilingDataAttr(opBuilder)};
+      caller.insertArgument(idx, opBuilder.getI64Type(),
+                            opBuilder.getDictionaryAttr(argAttrs),
+                            caller.getLoc());
+      tilingIdx2CallerArgIdx.insert({idx - callerArgCount, idx});
+    }
+
+    // Fix the call sites
+    bool calleeIsOriginalKernel = callerInfo.callee == getOriginalKernel();
+    CallSiteArgBuilderInfo builderInfo{tilingIdx2CallerArgIdx,
+                                       calleeIsOriginalKernel};
+    for (func::CallOp callSite : callerInfo.callSites) {
+      doFixCallSite(callerInfo, callSite, builderInfo, irMap, opBuilder);
+    }
+    processedCaller.insert(caller);
+    workList.erase(caller);
+  }
+  for (auto &[oldOp, newOp] : irMap) {
+    oldOp->replaceAllUsesWith(newOp);
+    oldOp->erase();
+  }
   return success();
 }
 

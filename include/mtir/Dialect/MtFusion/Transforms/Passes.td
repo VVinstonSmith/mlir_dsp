@@ -288,4 +288,35 @@ def MultiBuffering : Pass<"mtfusion-multi-buffering", "func::FuncOp"> {
   ];
 }
 
+def RedundantExtractRemoval : Pass<"redundant-extract-removal", "func::FuncOp"> {
+  let summary = "remove redundant tensor.extract and memref.subview.";
+  let constructor = "mlir::mtfusion::createRedundantExtractRemovalPass()";
+  let dependentDialects = [
+    "tensor::TensorDialect",
+    "mtfusion::MtFusionDialect",
+    "memref::MemRefDialect",
+  ];
+}
+
+def ThreadParallelization : Pass<"mtfusion-thread-parallelization", "func::FuncOp"> {
+  let summary = "parallize scf.for with multiple threads.";
+  let constructor = "mlir::mtfusion::createThreadParallelizationPass()";
+  let dependentDialects = [
+    "scf::SCFDialect",
+    "mtfusion::MtFusionDialect",
+  ];
+  let options = [
+    Option<"nthreads", "nthreads", "unsigned", "0", "Number of threads to use">,
+  ];
+}
+
+def BufferNormalize : Pass<"mtfusion-buffer-normalize", "func::FuncOp"> {
+  let summary = "normalize buffers in mtfution for dsp memory hierarchy.";
+  let constructor = "mlir::mtfusion::createBufferNormalizePass()";
+  let dependentDialects = [
+    "mtfusion::MtFusionDialect",
+    "memref::MemRefDialect",
+  ];
+}
+
 #endif // MTIR_DIALECT_MTFUSION_TRANSFORMS_PASSES
