@@ -87,7 +87,6 @@ scf::ForOp multiBufferize(scf::ForOp forOp, int level) {
   auto posStart = forOp.getLowerBound();
   auto posEnd = forOp.getUpperBound();
   auto tileSize = forOp.getStep();
-  auto c0 = builder.create<arith::ConstantIndexOp>(curLoc, 0);
 
   IRMapping prelogueMapping;
   prelogueMapping.map(forOp.getInductionVar(), posStart);
@@ -127,8 +126,12 @@ scf::ForOp multiBufferize(scf::ForOp forOp, int level) {
   // cout<<"readCpyOps:"<<endl; for(auto op : readCpyOps) op->dump();
   // cout<<"writeCpyOps:"<<endl; for(auto op : writeCpyOps) op->dump();
   // cout<<"allocSet:"<<endl; for(auto op : allocSet) op->dump();
+  if(readCpyOps.empty() && writeCpyOps.empty())
+    return forOp;
+  auto c0 = builder.create<arith::ConstantIndexOp>(curLoc, 0);
 
   DenseMap<memref::AllocOp, memref::AllocOp> allocMap;
+  DenseSet<memref::AllocOp> allocsToBeDeleted;
 
   /// Create multi-buffer allocOps and map to original allocOps.
   for(auto allocOp : allocSet) {
@@ -144,7 +147,9 @@ scf::ForOp multiBufferize(scf::ForOp forOp, int level) {
         builder.create<memref::AllocOp>(
             curLoc, newType, dynSizes, alignAttr
     ));
+    newAllocOp->setAttrs(allocOp->getAttrs());
     allocMap.insert(std::pair(allocOp, newAllocOp));
+    allocsToBeDeleted.insert(allocOp);
     
     auto buffer_0 = createReducedSubviewFromAlloc(builder, curLoc, newAllocOp, c0);
     prelogueMapping.map(allocOp.getResult(), buffer_0.getResult());
@@ -210,6 +215,7 @@ scf::ForOp multiBufferize(scf::ForOp forOp, int level) {
 
   auto absPos_next = builder.create<arith::SubIOp>(curLoc, pos_next, posStart);
   auto idx_next = builder.create<arith::DivSIOp>(curLoc, absPos_next, tileSize);
+  
   for(auto allocOp : allocSet) {
     auto newAllocOp = allocMap[allocOp];
     auto bufferId_next = builder.create<arith::RemSIOp>(curLoc, idx_next,
@@ -223,6 +229,9 @@ scf::ForOp multiBufferize(scf::ForOp forOp, int level) {
   /// Prefetch data for the next iteration.
   forOp.walk([&](Operation *op) {
     if(op->getParentOp() != forOp || isa<scf::YieldOp>(op))
+      return WalkResult::skip();
+    if(isa<memref::AllocOp>(op) 
+        && allocsToBeDeleted.contains(cast<memref::AllocOp>(op)))
       return WalkResult::skip();
     if((isa<linalg::LinalgOp>(op) && !isa<linalg::CopyOp>(op))
         || isa<scf::ForOp>(op)) // skip computing ops
@@ -374,6 +383,9 @@ scf::ForOp multiBufferize(scf::ForOp forOp, int level) {
 }
 
 void recursiveTraverseForOps(scf::ForOp forOpRoot, int level){
+  // scf::ForOp newForOpRoot = forOpRoot;
+  // if(level != 0)
+  //   newForOpRoot = multiBufferize(forOpRoot, level);
   scf::ForOp newForOpRoot = multiBufferize(forOpRoot, level);
   
   newForOpRoot.walk([&](scf::ForOp forOp){

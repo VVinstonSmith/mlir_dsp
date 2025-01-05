@@ -67,6 +67,15 @@ bool isSameSize(tensor::EmptyOp emptyOp, tensor::ExtractSliceOp sliceOp) {
   return true;
 }
 
+bool isSameSize(linalg::CopyOp copyOp, tensor::ExtractSliceOp sliceOp) {
+  auto cpySrc = copyOp.getInputs()[0];
+  if(auto emptyOp = dyn_cast<tensor::EmptyOp>(cpySrc.getDefiningOp()))
+    return isSameSize(emptyOp, sliceOp);
+  if(auto parentSliceOp = dyn_cast<tensor::ExtractSliceOp>(cpySrc.getDefiningOp()))
+    return isSameSize(parentSliceOp, sliceOp);
+  return false;
+}
+
 bool isSameSize(memref::AllocOp allocOp, memref::SubViewOp subviewOp) {
   auto allocType = allocOp.getType();
   if(subviewOp.getSizes().size() != allocType.getRank())
@@ -104,12 +113,14 @@ void removeRedundantExtract(scf::ForOp forOp) {
       return WalkResult::skip();
     // if current op is a tensor.extract_slice
     if(auto sliceOp = dyn_cast<tensor::ExtractSliceOp>(op)) {
+      bool sliceSrcIsArg = false;
       Operation* parentOp = sliceOp.getSource().getDefiningOp();
       if(!parentOp) {
         // if current op's src value is a scf.for iter_arg.
         for(auto [idx, regionIterArg] : llvm::enumerate(forOp.getRegionIterArgs())) {
           if(regionIterArg == sliceOp.getSource()) {
             parentOp = forOp.getInitArgs()[idx].getDefiningOp();
+            sliceSrcIsArg = true;
             break;
           }
         }
@@ -117,20 +128,32 @@ void removeRedundantExtract(scf::ForOp forOp) {
       if(!parentOp)
         return WalkResult::skip();
       // if the parent op is a linalg.copy
-      while(auto copyOp = dyn_cast<linalg::CopyOp>(parentOp)) {
-        parentOp = copyOp.getInputs()[0].getDefiningOp();
+      if(auto copyOp = dyn_cast<linalg::CopyOp>(parentOp)) {
+        if(isSameSize(copyOp, sliceOp)) {
+          if(sliceSrcIsArg)
+            sliceOp.replaceAllUsesWith(sliceOp.getSource());
+          else
+            sliceOp.replaceAllUsesWith(copyOp.getResult(0));
+          sliceOp.erase();
+        }
       }
       // if the parent op is a tensor.extract_slice
-      if(auto parentSliceOp = dyn_cast<tensor::ExtractSliceOp>(parentOp)) {
+      else if(auto parentSliceOp = dyn_cast<tensor::ExtractSliceOp>(parentOp)) {
         if(isSameSize(parentSliceOp, sliceOp)) {
-          sliceOp.replaceAllUsesWith(parentSliceOp.getResult());
+          if(sliceSrcIsArg)
+            sliceOp.replaceAllUsesWith(sliceOp.getSource());
+          else
+            sliceOp.replaceAllUsesWith(parentSliceOp.getResult());
           sliceOp.erase();
         }
       }
       // if the parent op is a tensor.empty
       else if(auto emptyOp = dyn_cast<tensor::EmptyOp>(parentOp)) {
         if(isSameSize(emptyOp, sliceOp)) {
-          sliceOp.replaceAllUsesWith(emptyOp.getResult());
+          if(sliceSrcIsArg)
+            sliceOp.replaceAllUsesWith(sliceOp.getSource());
+          else
+            sliceOp.replaceAllUsesWith(emptyOp.getResult());
           sliceOp.erase();
         }
       }
