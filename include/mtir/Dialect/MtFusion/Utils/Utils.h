@@ -230,6 +230,10 @@ linalg::CopyOp createCacheRead(OpBuilder &rewriter, Value operand,
 FailureOr<linalg::CopyOp> createCacheWrite(OpBuilder &rewriter, OpResult result,
                                            bool outputOnly,
                                            bool cacheWriteToOutputInit);
+
+std::pair<linalg::CopyOp, linalg::CopyOp> 
+createCacheReadAndWrite(OpBuilder &rewriter, OpResult result);
+
 } // namespace mtfusion
 } // namespace mlir
 

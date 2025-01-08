@@ -731,3 +731,32 @@ mtfusion::createCacheWrite(OpBuilder &rewriter, OpResult result, bool outputOnly
   result.replaceAllUsesExcept(cachedOp.getResult(0), exceptions);
   return cachedOp;
 }
+
+std::pair<linalg::CopyOp, linalg::CopyOp>
+mtfusion::createCacheReadAndWrite(OpBuilder &rewriter, OpResult result) {
+  auto definingOp = dyn_cast<linalg::LinalgOp>(result.getOwner());
+  if (!definingOp)
+    return {};
+  Location loc = definingOp->getLoc();
+  OpBuilder::InsertionGuard guard(rewriter);
+  auto initOpr =
+      definingOp.getDpsInitOperand(result.getResultNumber())->get();
+  SmallPtrSet<Operation *, 4> newOps;
+  // cache read
+  rewriter.setInsertionPoint(definingOp);
+  auto emptyOp = 
+      mtfusion::createEmptyOpWithSameShape(rewriter, initOpr, newOps, loc);
+  auto copyReadOp = rewriter.create<linalg::CopyOp>(loc, ValueRange{initOpr}, 
+                                                    ValueRange{emptyOp});
+  newOps.insert(emptyOp);
+  newOps.insert(copyReadOp);
+  // cache write
+  rewriter.setInsertionPointAfter(definingOp);
+  auto copyWriteOp = rewriter.create<linalg::CopyOp>(loc, ValueRange{result},
+                                                     ValueRange{initOpr});
+  newOps.insert(copyWriteOp);
+  // replace old values using newOps
+  initOpr.replaceAllUsesExcept(copyReadOp.getResult(0), newOps);
+  result.replaceAllUsesExcept(copyWriteOp.getResult(0), newOps);
+  return {copyReadOp, copyWriteOp};
+}

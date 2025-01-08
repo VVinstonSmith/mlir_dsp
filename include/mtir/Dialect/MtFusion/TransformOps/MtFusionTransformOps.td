@@ -269,6 +269,60 @@ def CacheWriteOp : Op<Transform_Dialect, "structured.cache_write", [
   }];
 }
 
+//===----------------------------------------------------------------------===//
+// CacheReadAndWriteOp
+//===----------------------------------------------------------------------===//
+
+def CacheReadAndWriteOp : Op<Transform_Dialect, "structured.cache_read_write", [
+  FunctionalStyleTransformOpTrait,
+  DeclareOpInterfaceMethods<MemoryEffectsOpInterface>,
+  TransformOpInterface]> {
+
+  let summary = "Create a cache read and write of original tensor.";
+
+  let description = [{
+    Create a cache read of the values given by the `targets` op handle.
+    For instance, given the input IR:
+
+    ```mlir
+    %out = linalg.matmul ins(%a, %b) outs(%c)
+    ```
+
+    If the `targets` handle points to `%out`, the IR after transformation is:
+
+    ```mlir
+    %empty = tensor.emtpy() : tensor<16x16xf16>
+    %c_in_cached = linalg.copy ins(%c : tensor<16x16xf16>) outs(%empty : tensor<16x16xf16>)
+    %c_out_cached = linalg.matmul ins(%a, %b) outs(%c_in_cached)
+    %out = linalg.copy(%c_out_cached, %c)
+    ```
+
+    The `targets` op handle may be associated with one or more payload IR values,
+    and cache read&write will be performed one by one.
+
+    #### Return modes
+    
+    The return handle points to the defining ops of the cached values.
+    This operation only reads the `targets` handle.
+  }];
+
+  let arguments = (ins TransformValueHandleTypeInterface:$targets);
+
+  let results = (outs TransformHandleTypeInterface:$copyReadOp,
+                      TransformHandleTypeInterface:$copyWriteOp);
+
+  let assemblyFormat = [{
+    $targets attr-dict `:` functional-type(operands, results)
+  }];
+
+  let extraClassDeclaration = [{
+    ::mlir::DiagnosedSilenceableFailure apply(
+        ::mlir::transform::TransformRewriter &rewriter,
+        ::mlir::transform::TransformResults &transformResults,
+        ::mlir::transform::TransformState &state);
+  }];
+}
+
 
 //===----------------------------------------------------------------------===//
 // ReverseOp

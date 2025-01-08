@@ -333,18 +333,26 @@ protected:
   CacheIOResult cacheRead(OpBuilder &opBuilder);
   CacheIOResult cacheRead(const ValueHandles &inputHandles,
       StringRef cacheReadTagName, OpBuilder &opBuilder);
-  CacheIOResult cacheRead(const ValueHandles &opHandles, 
-      int64_t oprIdx, 
-      StringRef cacheReadTagName, //ArrayRef<Attribute> copyDstAttrs,
-      OpBuilder &opBuilder);
-
+  
   /// Get a unique identifier to the cached op by the function argument index.
   std::string getCacheReadTag(size_t funcArgIdx);
 
   /// Perform cache write on kernel outputs.
   CacheIOResult cacheWrite(OpBuilder &opBuilder);
+  
+  /// Self-defined cache-read/write/read&write.
+  CacheIOResult cacheRead(const ValueHandles &opHandles, 
+      int64_t oprIdx, 
+      StringRef cacheReadTagName, //ArrayRef<Attribute> copyDstAttrs,
+      OpBuilder &opBuilder);
   CacheIOResult cacheWrite(const ValueHandles &opHandles,
       int64_t oprIdx,
+      StringRef cacheWriteTagName,
+      OpBuilder &opBuilder);
+  std::pair<CacheIOResult, CacheIOResult>
+  cacheReadAndWrite(const ValueHandles &opHandles, 
+      int64_t resIdx,
+      StringRef cacheReadTagName,
       StringRef cacheWriteTagName,
       OpBuilder &opBuilder);
 

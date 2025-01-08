@@ -215,6 +215,40 @@ void CacheWriteOp::getEffects(
 }
 
 //===----------------------------------------------------------------------===//
+// CacheReadAndWriteOp
+//===----------------------------------------------------------------------===//
+
+DiagnosedSilenceableFailure
+CacheReadAndWriteOp::apply(TransformRewriter &rewriter,
+                           TransformResults &transformResults, 
+                           TransformState &state) {
+  SmallVector<Operation *> copyReadOps, copyWriteOps;
+  for(Value target : state.getPayloadValues(getTargets())) {
+    // skip values that does not have tensor types
+    if (!isa<TensorType>(target.getType())) {
+      continue;
+    }
+    if (auto opResult = dyn_cast_or_null<OpResult>(target)) {
+      auto [copyReadOp, copyWriteOp] = createCacheReadAndWrite(rewriter, opResult);
+      copyReadOps.push_back(copyReadOp.getOperation());
+      copyWriteOps.push_back(copyWriteOp.getOperation());
+    } else {
+      llvm_unreachable("unsupported type");
+    }
+  }
+  transformResults.set(llvm::cast<OpResult>(getCopyReadOp()), copyReadOps);
+  transformResults.set(llvm::cast<OpResult>(getCopyWriteOp()), copyWriteOps);
+  return DiagnosedSilenceableFailure::success();
+}
+
+void CacheReadAndWriteOp::getEffects(
+    SmallVectorImpl<MemoryEffects::EffectInstance> &effects) {
+  onlyReadsHandle(getTargets(), effects);
+  producesHandle(getCopyReadOp(), effects);
+  producesHandle(getCopyWriteOp(), effects);
+}
+
+//===----------------------------------------------------------------------===//
 // ReverseOp
 //===----------------------------------------------------------------------===//
 

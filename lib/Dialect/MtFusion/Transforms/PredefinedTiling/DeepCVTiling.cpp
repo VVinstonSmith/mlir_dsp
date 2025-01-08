@@ -133,8 +133,9 @@ LogicalResult DeepCVTiler::createTilingImpl(OpBuilder &opBuilder) {
       auto copyMats = copyMatAttr.cast<CopyMatAttr>().getMatrices();
       auto copyDsts = toBeTiledKenrel.getArgAttr(tilingArgsPos[argIdx], 
           mtfusion::CopyDstAttr::name).cast<CopyDstAttr>().getCaches();
-      SmallVector<int64_t> readOprIndices, writeResIndices;
-      SmallVector<std::string> readOpAttrs, writeOpAttrs;
+      SmallVector<int64_t> readOprIndices;
+      SmallVector<std::string> readOpAttrs;
+      SmallVector<std::pair<std::string, std::string>> readAndWriteOpAttrs;
       for(size_t cpyId = 0; cpyId < copyMats.size(); cpyId++) {
         switch(copyMats[cpyId]) {
           case mtfusion::Matrix::MatA :
@@ -144,47 +145,24 @@ LogicalResult DeepCVTiler::createTilingImpl(OpBuilder &opBuilder) {
                 stringfyDataFlow(matDataLoc[copyMats[cpyId]], copyDsts[cpyId]));
             break;
           case mtfusion::Matrix::MatC :
-            readOprIndices.push_back(MatToOprId.at(copyMats[cpyId]));
-            readOpAttrs.push_back(
-                stringfyDataFlow(matDataLoc[copyMats[cpyId]], copyDsts[cpyId]));
-            writeResIndices.push_back(0);
-            writeOpAttrs.push_back(
-                stringfyDataFlow(copyDsts[cpyId], matDataLoc[copyMats[cpyId]]));
+            readAndWriteOpAttrs.push_back({
+              stringfyDataFlow(matDataLoc[copyMats[cpyId]], copyDsts[cpyId]),
+              stringfyDataFlow(copyDsts[cpyId], matDataLoc[copyMats[cpyId]])
+            });
             break;
           default:
             return toBeTiledKenrel->emitError("Error matrix attr.");
         };
         matDataLoc[copyMats[cpyId]] = copyDsts[cpyId];
       }
-      for(size_t i = 0; i < writeResIndices.size(); i++)
-        cacheWrite(splitMatmulOps, writeResIndices[i], writeOpAttrs[i], opBuilder);
       for(size_t i = 0; i < readOprIndices.size(); i++)
         cacheRead(splitMatmulOps, readOprIndices[i], readOpAttrs[i], opBuilder);
+      for(size_t i = 0; i < readAndWriteOpAttrs.size(); i++) {
+        auto [readOpAttr, writeOpAttr] = readAndWriteOpAttrs[i];
+        cacheReadAndWrite(splitMatmulOps, 0 /*resIndex*/, readOpAttr, writeOpAttr, opBuilder);
+      }
     }
   }
-
-  // CacheIOResult cacheReadResult = cacheRead(
-  //   const ValueHandles &inputHandles, opBuilder)
-
-  // ValueHandles operandHandles = getOpOperands(
-  //     splitMatmulOps, 0, opBuilder);
-
-  // CacheIOResult cacheReadResult = cacheRead(
-  //     operandHandles, "cache0", opBuilder);
-
-
-  // auto targetValue = getValue(splitMatmulOps[0], opBuilder);
-  // auto matmulOperand = opBuilder.create<transform::GetOperandOp>(
-  //     targetValue.getLoc(), 
-  //     opBuilder.getType<transform::AnyValueType>(),
-  //     targetValue, 0);
-
-  // auto cachedOp =
-  //     opBuilder.create<transform::CacheReadOp>(
-  //         matmulOperand.getLoc(),
-  //         /*cached=*/opBuilder.getType<transform::AnyOpType>(),
-  //         /*targets=*/matmulOperand);
-
   applyCanonicalization(opBuilder);
 
   return success();

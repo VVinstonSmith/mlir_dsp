@@ -250,7 +250,7 @@ TilerBase::cacheWrite(const ValueHandles &opHandles,
                 /*cached=*/opBuilder.getType<transform::AnyOpType>(),
                 /*targets=*/outputs,
                 /*output_only=*/true,
-                /*cache_write_to_output_init=*/false)
+                /*cache_write_to_output_init=*/true)
             .getCached();
     annotateByAttr(cachedOp, cacheWriteTagName, opBuilder);
   }
@@ -265,6 +265,43 @@ TilerBase::cacheWrite(const ValueHandles &opHandles,
                                                 /*needsAnnotate=*/false,
                                                 /*needsReverse=*/true})};
   return cacheIOResult;
+}
+
+std::pair<TilerBase::CacheIOResult, TilerBase::CacheIOResult>
+TilerBase::cacheReadAndWrite(const ValueHandles &opHandles, int64_t resIdx,
+    StringRef cacheReadTagName, StringRef cacheWriteTagName, OpBuilder &opBuilder) {
+  ValueHandles outputHandles = getOpResult(
+      opHandles, resIdx, opBuilder);
+  for (auto [idx, outputHandle] : llvm::enumerate(outputHandles)) {
+    Value outputs = getValue(outputHandle, opBuilder);
+    auto readAndWriteOp = opBuilder.create<transform::CacheReadAndWriteOp>(
+        outputs.getLoc(),
+        opBuilder.getType<transform::AnyOpType>(),
+        opBuilder.getType<transform::AnyOpType>(),
+        outputs);
+    auto copyReadOp = readAndWriteOp.getCopyReadOp();
+    annotateByAttr(copyReadOp, cacheReadTagName, opBuilder);
+    auto copyWriteOp = readAndWriteOp.getCopyWriteOp();
+    annotateByAttr(copyWriteOp, cacheWriteTagName, opBuilder);
+  }
+  auto matchTarget = getTransformSeqHandle();
+  auto cpyReadOps = matchByIdentifier(matchTarget, cacheReadTagName,
+                                      IdentifierType::kAttribute, opBuilder);
+  CacheIOResult cacheReadResult = 
+  {record<NamedValueHandle>(cpyReadOps, opBuilder,
+                            NamedValueHandleArgs{cacheReadTagName,
+                                                IdentifierType::kAttribute,
+                                                /*needsAnnotate=*/false,
+                                                /*needsReverse=*/false})};
+  auto cpyWriteOps = matchByIdentifier(matchTarget, cacheWriteTagName,
+                                      IdentifierType::kAttribute, opBuilder);
+  CacheIOResult cacheWriteResult = 
+  {record<NamedValueHandle>(cpyWriteOps, opBuilder,
+                            NamedValueHandleArgs{cacheWriteTagName,
+                                                IdentifierType::kAttribute,
+                                                /*needsAnnotate=*/false,
+                                                /*needsReverse=*/false})};
+  return {cacheReadResult, cacheWriteResult};
 }
 
 TilerBase::CacheIOResult TilerBase::cacheRead(OpBuilder &opBuilder) {
