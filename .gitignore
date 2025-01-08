@@ -43,8 +43,3 @@ demos/
 *.exe
 *.out
 *.app
-
-**/*.mlir
-lib/Dialect/MtFusion/Transforms/TilingOperations.cpp
-lib/Dialect/MtFusion/Transforms/BufferNormalize.cpp
-lib/Dialect/MtFusion/Transforms/MultiBuffering.cpp
