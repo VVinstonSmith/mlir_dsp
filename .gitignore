@@ -3,6 +3,19 @@ demos/
 **/*.txt
 !**/CMakeLists.txt
 
+**/*.mlir
+**/TilingOperations.cpp
+**/BufferNormalize.cpp
+**/MultiBuffering.cpp
+
+**/
+**/
+**/
+**/
+**/
+**/
+**/
+
 # Prerequisites
 *.d
 
